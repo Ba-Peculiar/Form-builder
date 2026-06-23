@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from 'express'
-import { ApiError, ValidationError } from '../shared/errors'
+import { ApiError, ValidationError } from '../shared/errors.js'
 
 export function errorHandler(
   err: unknown,

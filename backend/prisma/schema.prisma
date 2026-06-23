@@ -11,3 +11,54 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+enum FormStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Form {
+  id             String     @id @default(uuid())
+  title          String
+  description    String?
+  status         FormStatus @default(DRAFT)
+  currentVersion Int?       @map("current_version")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  versions    FormVersion[]
+  submissions Submission[]
+
+  @@index([status])
+  @@map("forms")
+}
+
+model FormVersion {
+  id            String   @id @default(uuid())
+  formId        String   @map("form_id")
+  versionNumber Int      @map("version_number")
+  schema        Json
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  form        Form         @relation(fields: [formId], references: [id])
+  submissions Submission[]
+
+  @@unique([formId, versionNumber])
+  @@index([formId])
+  @@map("form_versions")
+}
+
+model Submission {
+  id            String   @id @default(uuid())
+  formId        String   @map("form_id")
+  formVersionId String   @map("form_version_id")
+  data          Json
+  submittedAt   DateTime @default(now()) @map("submitted_at")
+
+  form        Form        @relation(fields: [formId], references: [id])
+  formVersion FormVersion @relation(fields: [formVersionId], references: [id])
+
+  @@index([formId])
+  @@index([formVersionId])
+  @@map("submissions")
+}
