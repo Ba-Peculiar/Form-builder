@@ -1,53 +1,66 @@
 import { Link, useParams } from 'react-router-dom'
-import { Code2 } from 'lucide-react'
 import { Alert, Badge, Card, LoadingState } from '../components/ui'
 import { useSubmission } from '../features/forms/queries'
+import { formatFullDate } from '../lib/formatDate'
+
+function humanizeKey(key: string): string {
+  return key
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function formatValue(value: unknown): string {
+  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+  if (value === null || value === undefined || value === '') return '—'
+  return String(value)
+}
 
 export function SubmissionDetailPage() {
   const { submissionId } = useParams<{ submissionId: string }>()
   const { data: submission, isLoading, isError } = useSubmission(submissionId ?? '')
 
   if (isLoading) {
-    return <LoadingState label="Loading submission…" />
+    return <LoadingState label="Loading response…" />
   }
 
   if (isError || !submission) {
     return (
       <div className="mx-auto max-w-3xl p-6">
-        <Alert variant="error">Submission not found.</Alert>
+        <Alert variant="error">Response not found.</Alert>
       </div>
     )
   }
 
+  const entries = Object.entries(submission.data)
+
   return (
     <div className="mx-auto max-w-3xl p-6">
       <Link to={`/forms/${submission.formId}/submissions`} className="text-sm text-slate-500 hover:text-slate-900">
-        ← Back to submissions
+        ← Back to responses
       </Link>
 
-      <h1 className="mt-4 text-2xl font-semibold text-slate-900">Submission</h1>
+      <div className="mt-4 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-slate-900">Response</h1>
+        <Badge variant="neutral">v{submission.version}</Badge>
+      </div>
+      <p className="mt-1 font-mono text-xs text-slate-400">{submission.id}</p>
+      <p className="mt-1 text-sm text-slate-500">{formatFullDate(submission.submittedAt)}</p>
 
-      <Card className="mt-4">
-        <dl className="grid grid-cols-2 gap-2 text-sm">
-          <dt className="font-medium text-slate-500">ID</dt>
-          <dd className="font-mono text-slate-900">{submission.id}</dd>
-
-          <dt className="font-medium text-slate-500">Version</dt>
-          <dd>
-            <Badge variant="neutral">v{submission.version}</Badge>
-          </dd>
-
-          <dt className="font-medium text-slate-500">Submitted At</dt>
-          <dd className="text-slate-900">{new Date(submission.submittedAt).toLocaleString()}</dd>
-        </dl>
-      </Card>
-
-      <h2 className="mt-6 flex items-center gap-2 text-lg font-semibold text-slate-900">
-        <Code2 className="h-4 w-4 text-slate-500" />
-        Data
-      </h2>
-      <Card padding="sm" className="mt-2">
-        <pre className="overflow-x-auto text-sm text-slate-900">{JSON.stringify(submission.data, null, 2)}</pre>
+      <Card className="mt-6" padding="none">
+        {entries.length === 0 ? (
+          <p className="p-4 text-sm text-slate-500">This response has no data.</p>
+        ) : (
+          <dl className="divide-y divide-slate-100">
+            {entries.map(([key, value]) => (
+              <div key={key} className="p-4">
+                <dt className="text-sm font-medium text-slate-500">{humanizeKey(key)}</dt>
+                <dd className="mt-1 text-sm text-slate-900">{formatValue(value)}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
       </Card>
     </div>
   )
