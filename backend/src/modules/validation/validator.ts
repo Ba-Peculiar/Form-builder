@@ -68,6 +68,8 @@ function formatError(error: ErrorObject, fieldsById: Map<string, FieldConfig>): 
         : { field: fieldId, message: `Invalid ${error.params.format} format` }
     case 'enum':
       return { field: fieldId, message: `${field?.label ?? fieldId} must be one of the allowed options` }
+    case 'pattern':
+      return { field: fieldId, message: `${field?.label ?? fieldId} must contain only digits` }
     case 'type':
       return { field: fieldId, message: `${field?.label ?? fieldId} has an invalid value` }
     default:

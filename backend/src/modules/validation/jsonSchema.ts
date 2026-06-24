@@ -45,10 +45,13 @@ function buildFieldSchema(field: FieldConfig): Record<string, unknown> {
     case 'date':
       return { type: 'string', format: 'date' }
     case 'number':
+      // min/max here bound digit count, not numeric value, so the value is kept
+      // as a digit string (preserves leading zeros, e.g. phone numbers).
       return omitUndefined({
-        type: 'number',
-        minimum: field.min,
-        maximum: field.max,
+        type: 'string',
+        pattern: '^[0-9]+$',
+        minLength: field.min,
+        maxLength: field.max,
       })
     case 'select':
       return { type: 'string', enum: field.options ?? [] }

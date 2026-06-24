@@ -211,13 +211,13 @@ function FieldRow({
       {field.type === 'number' && (
         <div className="mt-3 grid grid-cols-2 gap-3">
           <NumberField
-            label="Min value"
+            label="Min digits"
             value={field.min}
             disabled={disabled}
             onChange={(value) => onChange({ min: value })}
           />
           <NumberField
-            label="Max value"
+            label="Max digits"
             value={field.max}
             disabled={disabled}
             onChange={(value) => onChange({ max: value })}

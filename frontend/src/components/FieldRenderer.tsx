@@ -30,10 +30,12 @@ function FieldInput({ field, register }: FieldRendererProps) {
       return (
         <input
           id={field.id}
-          type="number"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
           required={field.required}
           className={baseClass}
-          {...register(field.id, { valueAsNumber: true })}
+          {...register(field.id)}
         />
       )
     case 'email':
