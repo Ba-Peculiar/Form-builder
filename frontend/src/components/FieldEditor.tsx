@@ -73,7 +73,7 @@ export function FieldEditor({ fields, onChange, disabled }: FieldEditorProps) {
     <div className="space-y-4">
       {fields.map((field, index) => (
         <FieldRow
-          key={field.id || index}
+          key={index}
           field={field}
           index={index}
           total={fields.length}
