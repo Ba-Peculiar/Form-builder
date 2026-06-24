@@ -1,25 +1,32 @@
 import type { UseFormRegister } from 'react-hook-form'
+import { FieldError } from './ui'
 import type { FieldConfig } from '../types/form'
 
 interface FieldRendererProps {
   field: FieldConfig
   register: UseFormRegister<Record<string, unknown>>
+  error?: string
 }
 
-export function FieldRenderer({ field, register }: FieldRendererProps) {
+export function FieldRenderer({ field, register, error }: FieldRendererProps) {
   return (
     <div className="flex flex-col">
       <label htmlFor={field.id} className="mb-1 text-sm font-medium text-slate-700">
         {field.label}
-        {field.required && <span className="text-red-600"> *</span>}
+        {field.required && <span className="text-danger-600"> *</span>}
       </label>
-      <FieldInput field={field} register={register} />
+      <FieldInput field={field} register={register} error={error} />
+      <FieldError message={error} />
     </div>
   )
 }
 
-function FieldInput({ field, register }: FieldRendererProps) {
-  const baseClass = 'rounded-md border border-slate-300 px-3 py-2 text-sm'
+function FieldInput({ field, register, error }: FieldRendererProps) {
+  const baseClass = `rounded-lg border px-3 py-2 text-sm focus:outline-none ${
+    error
+      ? 'border-danger-300 focus:border-danger-500 focus:ring-2 focus:ring-danger-200'
+      : 'border-slate-300 focus:border-accent-500 focus:ring-2 focus:ring-accent-200'
+  }`
 
   switch (field.type) {
     case 'textarea':
@@ -59,7 +66,12 @@ function FieldInput({ field, register }: FieldRendererProps) {
       )
     case 'checkbox':
       return (
-        <input id={field.id} type="checkbox" className="h-4 w-4 self-start" {...register(field.id)} />
+        <input
+          id={field.id}
+          type="checkbox"
+          className="h-4 w-4 self-start accent-accent-600"
+          {...register(field.id)}
+        />
       )
     case 'text':
     default:

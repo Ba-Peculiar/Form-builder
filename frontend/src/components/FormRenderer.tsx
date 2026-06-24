@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form'
+import { Button, Card } from './ui'
 import type { FieldConfig } from '../types/form'
 import { FieldRenderer } from './FieldRenderer'
 
@@ -9,9 +10,10 @@ interface FormRendererProps {
   layout: RendererLayout
   onSubmit: (data: Record<string, unknown>) => void
   submitLabel?: string
+  fieldErrors?: Record<string, string>
 }
 
-export function FormRenderer({ fields, layout, onSubmit, submitLabel = 'Submit' }: FormRendererProps) {
+export function FormRenderer({ fields, layout, onSubmit, submitLabel = 'Submit', fieldErrors }: FormRendererProps) {
   const { register, handleSubmit } = useForm<Record<string, unknown>>()
 
   const sortedFields = [...fields].sort((a, b) => a.order - b.order)
@@ -20,17 +22,26 @@ export function FormRenderer({ fields, layout, onSubmit, submitLabel = 'Submit' 
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={containerClass}>
-      {sortedFields.map((field) => (
-        <div key={field.id} className={layout === 'compact' ? 'min-w-[180px]' : undefined}>
-          <FieldRenderer field={field} register={register} />
-        </div>
-      ))}
-      <button
-        type="submit"
-        className="h-fit self-start rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
-      >
+      {sortedFields.map((field) => {
+        const fieldNode = <FieldRenderer field={field} register={register} error={fieldErrors?.[field.id]} />
+
+        if (layout === 'compact') {
+          return (
+            <div key={field.id} className="min-w-[180px]">
+              {fieldNode}
+            </div>
+          )
+        }
+
+        return (
+          <Card key={field.id} padding="sm">
+            {fieldNode}
+          </Card>
+        )
+      })}
+      <Button type="submit" className="h-fit self-start">
         {submitLabel}
-      </button>
+      </Button>
     </form>
   )
 }

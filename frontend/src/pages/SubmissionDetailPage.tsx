@@ -1,4 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
+import { Code2 } from 'lucide-react'
+import { Alert, Badge, Card, LoadingState } from '../components/ui'
 import { useSubmission } from '../features/forms/queries'
 
 export function SubmissionDetailPage() {
@@ -6,11 +8,15 @@ export function SubmissionDetailPage() {
   const { data: submission, isLoading, isError } = useSubmission(submissionId ?? '')
 
   if (isLoading) {
-    return <p className="p-6 text-slate-500">Loading submission…</p>
+    return <LoadingState label="Loading submission…" />
   }
 
   if (isError || !submission) {
-    return <p className="p-6 text-red-600">Submission not found.</p>
+    return (
+      <div className="mx-auto max-w-3xl p-6">
+        <Alert variant="error">Submission not found.</Alert>
+      </div>
+    )
   }
 
   return (
@@ -21,21 +27,28 @@ export function SubmissionDetailPage() {
 
       <h1 className="mt-4 text-2xl font-semibold text-slate-900">Submission</h1>
 
-      <dl className="mt-4 grid grid-cols-2 gap-2 rounded-md border border-slate-200 bg-white p-4 text-sm">
-        <dt className="font-medium text-slate-500">ID</dt>
-        <dd className="font-mono text-slate-900">{submission.id}</dd>
+      <Card className="mt-4">
+        <dl className="grid grid-cols-2 gap-2 text-sm">
+          <dt className="font-medium text-slate-500">ID</dt>
+          <dd className="font-mono text-slate-900">{submission.id}</dd>
 
-        <dt className="font-medium text-slate-500">Version</dt>
-        <dd className="text-slate-900">v{submission.version}</dd>
+          <dt className="font-medium text-slate-500">Version</dt>
+          <dd>
+            <Badge variant="neutral">v{submission.version}</Badge>
+          </dd>
 
-        <dt className="font-medium text-slate-500">Submitted At</dt>
-        <dd className="text-slate-900">{new Date(submission.submittedAt).toLocaleString()}</dd>
-      </dl>
+          <dt className="font-medium text-slate-500">Submitted At</dt>
+          <dd className="text-slate-900">{new Date(submission.submittedAt).toLocaleString()}</dd>
+        </dl>
+      </Card>
 
-      <h2 className="mt-6 text-lg font-semibold text-slate-900">Data</h2>
-      <pre className="mt-2 overflow-x-auto rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-900">
-        {JSON.stringify(submission.data, null, 2)}
-      </pre>
+      <h2 className="mt-6 flex items-center gap-2 text-lg font-semibold text-slate-900">
+        <Code2 className="h-4 w-4 text-slate-500" />
+        Data
+      </h2>
+      <Card padding="sm" className="mt-2">
+        <pre className="overflow-x-auto text-sm text-slate-900">{JSON.stringify(submission.data, null, 2)}</pre>
+      </Card>
     </div>
   )
 }

@@ -1,3 +1,15 @@
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { GripVertical, Plus, X } from 'lucide-react'
+import { Button, Card, IconButton, Select, Switch, TextInput } from './ui'
 import type { FieldConfig, FieldType } from '../types/form'
 
 const FIELD_TYPES: { value: FieldType; label: string }[] = [
@@ -34,6 +46,11 @@ interface FieldEditorProps {
 }
 
 export function FieldEditor({ fields, onChange, disabled }: FieldEditorProps) {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
   function updateField(index: number, patch: Partial<FieldConfig>) {
     onChange(fields.map((field, i) => (i === index ? { ...field, ...patch } : field)))
   }
@@ -59,136 +76,124 @@ export function FieldEditor({ fields, onChange, disabled }: FieldEditorProps) {
     onChange(fields.filter((_, i) => i !== index).map((field, i) => ({ ...field, order: i + 1 })))
   }
 
-  function moveField(index: number, direction: -1 | 1) {
-    const target = index + direction
-    if (target < 0 || target >= fields.length) return
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
 
-    const next = [...fields]
-    const [moved] = next.splice(index, 1)
-    next.splice(target, 0, moved)
+    const oldIndex = fields.findIndex((field) => field.id === active.id)
+    const newIndex = fields.findIndex((field) => field.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const next = arrayMove(fields, oldIndex, newIndex)
     onChange(next.map((field, i) => ({ ...field, order: i + 1 })))
   }
 
   return (
-    <div className="space-y-4">
-      {fields.map((field, index) => (
-        <FieldRow
-          key={index}
-          field={field}
-          index={index}
-          total={fields.length}
-          disabled={disabled}
-          onLabelChange={(label) => updateLabel(index, label)}
-          onChange={(patch) => updateField(index, patch)}
-          onRemove={() => removeField(index)}
-          onMove={(direction) => moveField(index, direction)}
-        />
-      ))}
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={fields.map((field) => field.id)} strategy={verticalListSortingStrategy}>
+        <div className="space-y-3">
+          {fields.map((field, index) => (
+            <FieldRow
+              key={index}
+              field={field}
+              disabled={disabled}
+              onLabelChange={(label) => updateLabel(index, label)}
+              onChange={(patch) => updateField(index, patch)}
+              onRemove={() => removeField(index)}
+            />
+          ))}
+        </div>
+      </SortableContext>
 
-      <button
+      <Button
         type="button"
+        variant="secondary"
         onClick={addField}
         disabled={disabled}
-        className="rounded-md border border-dashed border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:border-slate-400 disabled:opacity-50"
+        className="mt-3 w-full border-dashed border-accent-300 text-accent-700 hover:border-accent-400 hover:bg-accent-50"
       >
-        + Add field
-      </button>
-    </div>
+        <Plus className="h-4 w-4" />
+        Add field
+      </Button>
+    </DndContext>
   )
 }
 
 interface FieldRowProps {
   field: FieldConfig
-  index: number
-  total: number
   disabled?: boolean
   onLabelChange: (label: string) => void
   onChange: (patch: Partial<FieldConfig>) => void
   onRemove: () => void
-  onMove: (direction: -1 | 1) => void
 }
 
-function FieldRow({
-  field,
-  index,
-  total,
-  disabled,
-  onLabelChange,
-  onChange,
-  onRemove,
-  onMove,
-}: FieldRowProps) {
+function FieldRow({ field, disabled, onLabelChange, onChange, onRemove }: FieldRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: field.id,
+    disabled,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-4">
+    <Card
+      ref={setNodeRef}
+      style={style}
+      className={`group focus-within:border-l-4 focus-within:border-l-accent-600 focus-within:ring-2 focus-within:ring-accent-200 ${
+        isDragging ? 'opacity-50' : ''
+      }`}
+    >
       <div className="mb-3 flex items-center justify-between">
-        <span className="font-mono text-xs text-slate-400">id: {field.id}</span>
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => onMove(-1)}
-            disabled={disabled || index === 0}
-            className="text-sm text-slate-500 hover:text-slate-900 disabled:opacity-30"
-          >
-            ↑
-          </button>
-          <button
-            type="button"
-            onClick={() => onMove(1)}
-            disabled={disabled || index === total - 1}
-            className="text-sm text-slate-500 hover:text-slate-900 disabled:opacity-30"
-          >
-            ↓
-          </button>
-          <button
-            type="button"
-            onClick={onRemove}
+            {...attributes}
+            {...listeners}
             disabled={disabled}
-            className="text-sm text-red-600 hover:text-red-800 disabled:opacity-30"
+            aria-label="Drag to reorder"
+            className="cursor-grab touch-none text-slate-400 hover:text-slate-600 active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-30"
           >
-            Remove
+            <GripVertical className="h-4 w-4" />
           </button>
+          <span className="font-mono text-xs text-slate-400">id: {field.id}</span>
+        </div>
+        <div className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+          <IconButton icon={X} label="Remove field" variant="danger" onClick={onRemove} disabled={disabled} />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-slate-700">Label</label>
-          <input
-            value={field.label}
-            disabled={disabled}
-            onChange={(e) => onLabelChange(e.target.value)}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          />
-        </div>
+        <TextInput
+          label="Label"
+          value={field.label}
+          disabled={disabled}
+          onChange={(e) => onLabelChange(e.target.value)}
+        />
 
-        <div>
-          <label className="block text-sm font-medium text-slate-700">Type</label>
-          <select
-            value={field.type}
-            disabled={disabled}
-            onChange={(e) => onChange({ type: e.target.value as FieldType })}
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          >
-            {FIELD_TYPES.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Select
+          label="Type"
+          value={field.type}
+          disabled={disabled}
+          onChange={(e) => onChange({ type: e.target.value as FieldType })}
+        >
+          {FIELD_TYPES.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
       </div>
 
-      <div className="mt-3 flex items-center gap-2">
-        <input
-          id={`required-${field.id}`}
-          type="checkbox"
+      <div className="mt-3">
+        <Switch
           checked={field.required ?? false}
+          onChange={(checked) => onChange({ required: checked })}
           disabled={disabled}
-          onChange={(e) => onChange({ required: e.target.checked })}
+          label="Required"
         />
-        <label htmlFor={`required-${field.id}`} className="text-sm text-slate-700">
-          Required
-        </label>
       </div>
 
       {(field.type === 'text' || field.type === 'textarea') && (
@@ -227,41 +232,43 @@ function FieldRow({
 
       {field.type === 'select' && (
         <div className="mt-3 space-y-2">
-          <label className="block text-sm font-medium text-slate-700">Options</label>
+          <span className="block text-sm font-medium text-slate-700">Options</span>
           {(field.options ?? []).map((option, optIndex) => (
             <div key={optIndex} className="flex items-center gap-2">
-              <input
-                value={option}
+              <div className="flex-1">
+                <TextInput
+                  value={option}
+                  disabled={disabled}
+                  placeholder={`Option ${optIndex + 1}`}
+                  onChange={(e) => {
+                    const next = [...(field.options ?? [])]
+                    next[optIndex] = e.target.value
+                    onChange({ options: next })
+                  }}
+                />
+              </div>
+              <IconButton
+                icon={X}
+                label="Remove option"
+                variant="danger"
                 disabled={disabled}
-                onChange={(e) => {
-                  const next = [...(field.options ?? [])]
-                  next[optIndex] = e.target.value
-                  onChange({ options: next })
-                }}
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-                placeholder={`Option ${optIndex + 1}`}
-              />
-              <button
-                type="button"
                 onClick={() => onChange({ options: (field.options ?? []).filter((_, i) => i !== optIndex) })}
-                disabled={disabled}
-                className="text-sm text-red-600 hover:text-red-800 disabled:opacity-30"
-              >
-                Remove
-              </button>
+              />
             </div>
           ))}
-          <button
+          <Button
             type="button"
-            onClick={() => onChange({ options: [...(field.options ?? []), ''] })}
+            variant="ghost"
+            size="sm"
             disabled={disabled}
-            className="rounded-md border border-dashed border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:border-slate-400 disabled:opacity-50"
+            onClick={() => onChange({ options: [...(field.options ?? []), ''] })}
           >
-            + Add option
-          </button>
+            <Plus className="h-3.5 w-3.5" />
+            Add option
+          </Button>
         </div>
       )}
-    </div>
+    </Card>
   )
 }
 
@@ -277,15 +284,12 @@ function NumberField({
   onChange: (value: number | undefined) => void
 }) {
   return (
-    <div>
-      <label className="block text-sm font-medium text-slate-700">{label}</label>
-      <input
-        type="number"
-        value={value ?? ''}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value === '' ? undefined : Number(e.target.value))}
-        className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-      />
-    </div>
+    <TextInput
+      type="number"
+      label={label}
+      value={value ?? ''}
+      disabled={disabled}
+      onChange={(e) => onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+    />
   )
 }

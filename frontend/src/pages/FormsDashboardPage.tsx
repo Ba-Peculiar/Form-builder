@@ -1,125 +1,103 @@
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router-dom'
+import { FileText, Plus } from 'lucide-react'
+import { Alert, Badge, Card, EmptyState, LoadingState } from '../components/ui'
 import { useCreateForm, useForms } from '../features/forms/queries'
-import type { CreateFormInput } from '../types/form'
+import type { FormSummary } from '../types/form'
 
 export function FormsDashboardPage() {
+  const navigate = useNavigate()
   const { data: forms, isLoading, isError } = useForms()
-  const [isCreating, setIsCreating] = useState(false)
+  const createForm = useCreateForm()
+
+  function handleCreateBlank() {
+    createForm.mutate({ title: 'Untitled form' }, { onSuccess: (form) => navigate(`/forms/${form.id}`) })
+  }
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Forms</h1>
+    <div className="mx-auto max-w-5xl p-6">
+      <section>
+        <h2 className="mb-3 text-sm font-medium text-slate-600">Start a new form</h2>
         <button
           type="button"
-          onClick={() => setIsCreating((value) => !value)}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700"
+          onClick={handleCreateBlank}
+          disabled={createForm.isPending}
+          className="flex w-40 flex-col items-center gap-2 disabled:opacity-50"
         >
-          {isCreating ? 'Cancel' : 'New Form'}
+          <span className="flex h-28 w-40 items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+            <Plus className="h-9 w-9 text-accent-600" />
+          </span>
+          <span className="text-sm text-slate-700">Blank form</span>
         </button>
-      </div>
+        {createForm.isError && (
+          <div className="mt-3 max-w-sm">
+            <Alert variant="error">{createForm.error.message}</Alert>
+          </div>
+        )}
+      </section>
 
-      {isCreating && <CreateFormPanel onDone={() => setIsCreating(false)} />}
+      <section className="mt-10">
+        <h2 className="mb-3 text-sm font-medium text-slate-600">Your forms</h2>
 
-      {isLoading && <p className="text-slate-500">Loading forms…</p>}
-      {isError && <p className="text-red-600">Failed to load forms.</p>}
+        {isLoading && <LoadingState label="Loading forms…" />}
+        {isError && <Alert variant="error">Failed to load forms.</Alert>}
 
-      {forms && forms.length === 0 && (
-        <p className="text-slate-500">No forms yet. Create your first one.</p>
-      )}
+        {forms && forms.length === 0 && (
+          <EmptyState
+            icon={FileText}
+            title="No forms yet"
+            description='Click "Blank form" above to create your first one.'
+          />
+        )}
 
-      {forms && forms.length > 0 && (
-        <ul className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-white">
-          {forms.map((form) => (
-            <li key={form.id} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50">
-              <Link to={`/forms/${form.id}`} className="font-medium text-slate-900">
-                {form.title}
-              </Link>
-              <span className="flex items-center gap-3 text-sm text-slate-500">
-                {form.currentVersion && <span>v{form.currentVersion}</span>}
-                <StatusBadge status={form.status} />
-                {form.status === 'PUBLISHED' && (
-                  <Link to={`/public/forms/${form.id}`} className="text-slate-900 underline">
-                    View
-                  </Link>
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+        {forms && forms.length > 0 && (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {forms.map((form) => (
+              <FormCard key={form.id} form={form} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }
 
-function StatusBadge({ status }: { status: 'DRAFT' | 'PUBLISHED' }) {
-  const className =
-    status === 'PUBLISHED'
-      ? 'bg-green-100 text-green-700'
-      : 'bg-amber-100 text-amber-700'
-
+function FormCard({ form }: { form: FormSummary }) {
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${className}`}>
-      {status}
-    </span>
+    <Card padding="none" className="overflow-hidden transition-shadow hover:shadow-md">
+      <Link to={`/forms/${form.id}`} className="block">
+        <FormPreviewThumbnail />
+      </Link>
+      <div className="flex items-center justify-between gap-2 border-t border-slate-200 p-3">
+        <Link to={`/forms/${form.id}`} className="truncate text-sm font-medium text-slate-900">
+          {form.title}
+        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          {form.currentVersion && <Badge variant="neutral">v{form.currentVersion}</Badge>}
+          <Badge variant={form.status === 'PUBLISHED' ? 'published' : 'draft'}>{form.status}</Badge>
+        </div>
+      </div>
+      {form.status === 'PUBLISHED' && (
+        <div className="border-t border-slate-100 px-3 py-2">
+          <Link
+            to={`/public/forms/${form.id}`}
+            className="text-xs font-medium text-accent-600 hover:text-accent-700"
+          >
+            View public form →
+          </Link>
+        </div>
+      )}
+    </Card>
   )
 }
 
-function CreateFormPanel({ onDone }: { onDone: () => void }) {
-  const navigate = useNavigate()
-  const createForm = useCreateForm()
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<CreateFormInput>()
-
-  const onSubmit = (input: CreateFormInput) => {
-    createForm.mutate(input, {
-      onSuccess: (form) => {
-        onDone()
-        navigate(`/forms/${form.id}`)
-      },
-    })
-  }
-
+function FormPreviewThumbnail() {
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="mb-6 space-y-3 rounded-md border border-slate-200 bg-white p-4"
-    >
-      <div>
-        <label className="block text-sm font-medium text-slate-700">Title</label>
-        <input
-          {...register('title', { required: 'Title is required' })}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          placeholder="Customer Registration"
-        />
-        {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-slate-700">Description</label>
-        <textarea
-          {...register('description')}
-          className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-          placeholder="Collect customer information"
-        />
-      </div>
-
-      {createForm.isError && (
-        <p className="text-sm text-red-600">{createForm.error.message}</p>
-      )}
-
-      <button
-        type="submit"
-        disabled={createForm.isPending}
-        className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
-      >
-        {createForm.isPending ? 'Creating…' : 'Create'}
-      </button>
-    </form>
+    <div className="flex h-28 flex-col gap-1.5 bg-accent-50 p-3">
+      <div className="h-1.5 w-2/3 rounded bg-accent-300" />
+      <div className="mt-1 h-1 w-full rounded bg-white" />
+      <div className="h-1 w-5/6 rounded bg-white" />
+      <div className="h-1 w-4/6 rounded bg-white" />
+      <div className="mt-auto h-2 w-10 rounded bg-accent-300" />
+    </div>
   )
 }

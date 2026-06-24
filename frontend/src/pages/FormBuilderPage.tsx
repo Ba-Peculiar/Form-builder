@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useForm as useReactHookForm } from 'react-hook-form'
 import { Link, useParams } from 'react-router-dom'
 import { FieldEditor } from '../components/FieldEditor'
+import { Alert, Button, Card, LoadingState, TextInput, Textarea } from '../components/ui'
 import { useForm, usePublishForm, useUpdateForm } from '../features/forms/queries'
 import type { FieldConfig, UpdateFormInput } from '../types/form'
 
@@ -9,6 +10,8 @@ interface BuilderFormValues {
   title: string
   description: string
 }
+
+const FORM_ELEMENT_ID = 'form-builder'
 
 export function FormBuilderPage() {
   const { formId } = useParams<{ formId: string }>()
@@ -33,11 +36,15 @@ export function FormBuilderPage() {
   }, [form])
 
   if (isLoading) {
-    return <p className="p-6 text-slate-500">Loading form…</p>
+    return <LoadingState label="Loading form…" />
   }
 
   if (isError || !form) {
-    return <p className="p-6 text-red-600">Form not found.</p>
+    return (
+      <div className="mx-auto max-w-3xl p-6">
+        <Alert variant="error">Form not found.</Alert>
+      </div>
+    )
   }
 
   const isReadOnly = form.status !== 'DRAFT'
@@ -53,94 +60,106 @@ export function FormBuilderPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <Link to="/" className="text-sm text-slate-500 hover:text-slate-900">
-        ← Back to forms
-      </Link>
+      <div className="mb-4 flex items-center justify-between">
+        <Link to="/" className="text-sm text-slate-500 hover:text-slate-900">
+          ← Back to forms
+        </Link>
+
+        {!isReadOnly && (
+          <div className="flex items-center gap-2">
+            <Button type="submit" form={FORM_ELEMENT_ID} size="sm" isLoading={updateForm.isPending}>
+              Save
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              isLoading={publishForm.isPending}
+              onClick={() => publishForm.mutate()}
+            >
+              Publish
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="mb-4 flex gap-6 border-b border-slate-200 text-sm font-medium">
+        <span className="border-b-2 border-accent-600 px-1 pb-2 text-accent-700">Questions</span>
+        <Link to={`/forms/${form.id}/submissions`} className="px-1 pb-2 text-slate-500 hover:text-slate-700">
+          Responses
+        </Link>
+      </div>
 
       {isReadOnly && (
-        <p className="mt-4 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          This form is published and read-only.{' '}
-          <Link to={`/public/forms/${form.id}`} className="underline">
-            View public form
-          </Link>{' '}
-          ·{' '}
-          <Link to={`/forms/${form.id}/submissions`} className="underline">
-            View submissions
-          </Link>
-        </p>
+        <div className="mb-4">
+          <Alert variant="warning" title="This form is published and read-only.">
+            <Link to={`/public/forms/${form.id}`} className="underline">
+              View public form
+            </Link>{' '}
+            ·{' '}
+            <Link to={`/forms/${form.id}/submissions`} className="underline">
+              View submissions
+            </Link>
+          </Alert>
+        </div>
       )}
 
       {publishForm.isError && (
-        <p className="mt-4 text-sm text-red-600">{publishForm.error.message}</p>
+        <div className="mb-4">
+          <Alert variant="error">{publishForm.error.message}</Alert>
+        </div>
       )}
       {publishForm.isSuccess && (
-        <p className="mt-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
-          Form published as version {publishForm.data.version}.{' '}
-          <Link to={`/public/forms/${publishForm.data.formId}`} className="underline">
-            View public form
-          </Link>{' '}
-          ·{' '}
-          <Link to={`/forms/${publishForm.data.formId}/submissions`} className="underline">
-            View submissions
-          </Link>
-        </p>
+        <div className="mb-4">
+          <Alert variant="success" title={`Form published as version ${publishForm.data.version}.`}>
+            <Link to={`/public/forms/${publishForm.data.formId}`} className="underline">
+              View public form
+            </Link>{' '}
+            ·{' '}
+            <Link to={`/forms/${publishForm.data.formId}/submissions`} className="underline">
+              View submissions
+            </Link>
+          </Alert>
+        </div>
+      )}
+      {updateForm.isError && (
+        <div className="mb-4">
+          <Alert variant="error">{updateForm.error.message}</Alert>
+        </div>
+      )}
+      {updateForm.isSuccess && (
+        <div className="mb-4">
+          <Alert variant="success">Form saved.</Alert>
+        </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-4 space-y-6">
-        <div className="space-y-3 rounded-md border border-slate-200 bg-white p-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Title</label>
-            <input
+      <form id={FORM_ELEMENT_ID} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <Card padding="none" className="overflow-hidden">
+          <div className="h-2 bg-accent-600" />
+          <div className="space-y-2 p-5">
+            <TextInput
+              aria-label="Form title"
+              placeholder="Untitled form"
               defaultValue={form.title}
               disabled={isReadOnly}
+              error={errors.title?.message}
+              className="border-none px-0 text-2xl font-semibold"
               {...register('title', { required: 'Title is required' })}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
-            {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>}
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700">Description</label>
-            <textarea
+            <Textarea
+              aria-label="Form description"
+              placeholder="Form description"
               defaultValue={form.description ?? ''}
               disabled={isReadOnly}
+              rows={1}
+              className="border-none px-0 text-sm text-slate-600"
               {...register('description')}
-              className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
             />
           </div>
-        </div>
+        </Card>
 
-        <div>
-          <h2 className="mb-3 text-lg font-semibold text-slate-900">Fields</h2>
-          <FieldEditor fields={fields} onChange={setFields} disabled={isReadOnly} />
-        </div>
-
-        {updateForm.isError && (
-          <p className="text-sm text-red-600">{updateForm.error.message}</p>
-        )}
-        {updateForm.isSuccess && (
-          <p className="text-sm text-green-600">Form saved.</p>
-        )}
-
-        {!isReadOnly && (
-          <div className="flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={updateForm.isPending}
-              className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
-            >
-              {updateForm.isPending ? 'Saving…' : 'Save'}
-            </button>
-            <button
-              type="button"
-              onClick={() => publishForm.mutate()}
-              disabled={publishForm.isPending}
-              className="rounded-md border border-slate-900 px-4 py-2 text-sm font-medium text-slate-900 hover:bg-slate-100 disabled:opacity-50"
-            >
-              {publishForm.isPending ? 'Publishing…' : 'Publish'}
-            </button>
-          </div>
-        )}
+        <FieldEditor fields={fields} onChange={setFields} disabled={isReadOnly} />
       </form>
     </div>
   )

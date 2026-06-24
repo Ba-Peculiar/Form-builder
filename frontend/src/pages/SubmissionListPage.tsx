@@ -1,4 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
+import { Inbox } from 'lucide-react'
+import { Alert, Badge, Card, EmptyState, LoadingState } from '../components/ui'
 import { useForm, useSubmissions } from '../features/forms/queries'
 
 export function SubmissionListPage() {
@@ -16,27 +18,37 @@ export function SubmissionListPage() {
         Submissions{form && ` for ${form.title}`}
       </h1>
 
-      {isLoading && <p className="mt-4 text-slate-500">Loading submissions…</p>}
-      {isError && <p className="mt-4 text-red-600">Failed to load submissions.</p>}
+      {isLoading && <LoadingState label="Loading submissions…" />}
+      {isError && (
+        <div className="mt-4">
+          <Alert variant="error">Failed to load submissions.</Alert>
+        </div>
+      )}
 
       {submissions && submissions.length === 0 && (
-        <p className="mt-4 text-slate-500">No submissions yet.</p>
+        <div className="mt-4">
+          <EmptyState
+            icon={Inbox}
+            title="No submissions yet"
+            description="Submissions will appear here once people fill out this form."
+          />
+        </div>
       )}
 
       {submissions && submissions.length > 0 && (
-        <ul className="mt-4 divide-y divide-slate-200 rounded-md border border-slate-200 bg-white">
+        <div className="mt-4 space-y-2">
           {submissions.map((submission) => (
-            <li key={submission.id} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50">
+            <Card key={submission.id} padding="sm" className="flex items-center justify-between hover:shadow-md transition-shadow">
               <Link to={`/submissions/${submission.id}`} className="font-mono text-sm text-slate-900">
                 {submission.id}
               </Link>
               <span className="flex items-center gap-3 text-sm text-slate-500">
-                <span>v{submission.version}</span>
+                <Badge variant="neutral">v{submission.version}</Badge>
                 <span>{new Date(submission.submittedAt).toLocaleString()}</span>
               </span>
-            </li>
+            </Card>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   )
