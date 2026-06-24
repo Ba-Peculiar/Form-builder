@@ -62,6 +62,10 @@ export function FormBuilderPage() {
           This form is published and read-only.{' '}
           <Link to={`/public/forms/${form.id}`} className="underline">
             View public form
+          </Link>{' '}
+          ·{' '}
+          <Link to={`/forms/${form.id}/submissions`} className="underline">
+            View submissions
           </Link>
         </p>
       )}
@@ -74,6 +78,10 @@ export function FormBuilderPage() {
           Form published as version {publishForm.data.version}.{' '}
           <Link to={`/public/forms/${publishForm.data.formId}`} className="underline">
             View public form
+          </Link>{' '}
+          ·{' '}
+          <Link to={`/forms/${publishForm.data.formId}/submissions`} className="underline">
+            View submissions
           </Link>
         </p>
       )}

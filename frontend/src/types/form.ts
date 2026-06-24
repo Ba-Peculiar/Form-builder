@@ -86,3 +86,17 @@ export interface PublicForm {
     fields: FieldConfig[]
   }
 }
+
+export interface SubmissionSummary {
+  id: string
+  submittedAt: string
+  version: number
+}
+
+export interface SubmissionDetail {
+  id: string
+  formId: string
+  version: number
+  submittedAt: string
+  data: Record<string, unknown>
+}

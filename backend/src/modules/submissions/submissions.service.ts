@@ -35,3 +35,41 @@ export async function createSubmission(formId: string, data: unknown) {
 
   return { submissionId: submission.id }
 }
+
+export async function listSubmissions(formId: string) {
+  const form = await prisma.form.findUnique({ where: { id: formId } })
+  if (!form) {
+    throw new NotFoundError('Form not found')
+  }
+
+  const submissions = await prisma.submission.findMany({
+    where: { formId },
+    include: { formVersion: true },
+    orderBy: { submittedAt: 'desc' },
+  })
+
+  return submissions.map((submission) => ({
+    id: submission.id,
+    submittedAt: submission.submittedAt,
+    version: submission.formVersion.versionNumber,
+  }))
+}
+
+export async function getSubmission(submissionId: string) {
+  const submission = await prisma.submission.findUnique({
+    where: { id: submissionId },
+    include: { formVersion: true },
+  })
+
+  if (!submission) {
+    throw new NotFoundError('Submission not found')
+  }
+
+  return {
+    id: submission.id,
+    formId: submission.formId,
+    version: submission.formVersion.versionNumber,
+    submittedAt: submission.submittedAt,
+    data: submission.data,
+  }
+}

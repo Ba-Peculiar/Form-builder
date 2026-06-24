@@ -2,6 +2,8 @@ import { Route, Routes } from 'react-router-dom'
 import { FormBuilderPage } from './pages/FormBuilderPage'
 import { FormsDashboardPage } from './pages/FormsDashboardPage'
 import { PublicFormPage } from './pages/PublicFormPage'
+import { SubmissionDetailPage } from './pages/SubmissionDetailPage'
+import { SubmissionListPage } from './pages/SubmissionListPage'
 
 function App() {
   return (
@@ -14,6 +16,8 @@ function App() {
           <Route path="/" element={<FormsDashboardPage />} />
           <Route path="/forms/:formId" element={<FormBuilderPage />} />
           <Route path="/public/forms/:formId" element={<PublicFormPage />} />
+          <Route path="/forms/:formId/submissions" element={<SubmissionListPage />} />
+          <Route path="/submissions/:submissionId" element={<SubmissionDetailPage />} />
         </Routes>
       </main>
     </div>

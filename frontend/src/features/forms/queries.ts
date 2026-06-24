@@ -8,6 +8,8 @@ import type {
   FormSummary,
   PublicForm,
   PublishFormResponse,
+  SubmissionDetail,
+  SubmissionSummary,
   UpdateFormInput,
 } from '../../types/form'
 
@@ -64,6 +66,22 @@ export function usePublicForm(formId: string) {
 export function useCreateSubmission(formId: string) {
   return useMutation<CreateSubmissionResponse, ApiError, Record<string, unknown>>({
     mutationFn: (data) => api.post<CreateSubmissionResponse>(`/forms/${formId}/submissions`, data),
+  })
+}
+
+export function useSubmissions(formId: string) {
+  return useQuery({
+    queryKey: ['forms', formId, 'submissions'] as const,
+    queryFn: () => api.get<SubmissionSummary[]>(`/forms/${formId}/submissions`),
+    enabled: Boolean(formId),
+  })
+}
+
+export function useSubmission(submissionId: string) {
+  return useQuery({
+    queryKey: ['submissions', submissionId] as const,
+    queryFn: () => api.get<SubmissionDetail>(`/submissions/${submissionId}`),
+    enabled: Boolean(submissionId),
   })
 }
 
