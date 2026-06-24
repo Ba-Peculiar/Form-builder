@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import { ChevronRight, FileText, Inbox } from 'lucide-react'
+import { FormTabs } from '../components/FormTabs'
 import { Alert, Badge, Card, EmptyState, LoadingState } from '../components/ui'
 import { useForm, useSubmissions } from '../features/forms/queries'
 import { formatRelativeTime } from '../lib/formatDate'
@@ -11,11 +12,9 @@ export function SubmissionListPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <Link to={`/forms/${formId}`} className="text-sm text-slate-500 hover:text-slate-900">
-        ← Back to form
-      </Link>
+      <FormTabs formId={formId ?? ''} active="responses" />
 
-      <div className="mt-4 flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Responses</h1>
           {form && <p className="mt-1 text-sm text-slate-500">{form.title}</p>}

@@ -1,4 +1,5 @@
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { FormTabs } from '../components/FormTabs'
 import { Alert, Badge, Card, LoadingState } from '../components/ui'
 import { useSubmission } from '../features/forms/queries'
 import { formatFullDate } from '../lib/formatDate'
@@ -37,11 +38,9 @@ export function SubmissionDetailPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <Link to={`/forms/${submission.formId}/submissions`} className="text-sm text-slate-500 hover:text-slate-900">
-        ← Back to responses
-      </Link>
+      <FormTabs formId={submission.formId} active="responses" />
 
-      <div className="mt-4 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-slate-900">Response</h1>
         <Badge variant="neutral">v{submission.version}</Badge>
       </div>

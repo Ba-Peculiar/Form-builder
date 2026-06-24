@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useForm as useReactHookForm } from 'react-hook-form'
 import { Link, useParams } from 'react-router-dom'
 import { FieldEditor } from '../components/FieldEditor'
+import { FormTabs } from '../components/FormTabs'
 import { Alert, Button, Card, LoadingState, TextInput, Textarea } from '../components/ui'
 import { useForm, usePublishForm, useUpdateForm } from '../features/forms/queries'
 import type { FieldConfig, UpdateFormInput } from '../types/form'
@@ -83,12 +84,7 @@ export function FormBuilderPage() {
         )}
       </div>
 
-      <div className="mb-4 flex gap-6 border-b border-slate-200 text-sm font-medium">
-        <span className="border-b-2 border-accent-600 px-1 pb-2 text-accent-700">Questions</span>
-        <Link to={`/forms/${form.id}/submissions`} className="px-1 pb-2 text-slate-500 hover:text-slate-700">
-          Responses
-        </Link>
-      </div>
+      <FormTabs formId={form.id} active="questions" />
 
       {isReadOnly && (
         <div className="mb-4">
