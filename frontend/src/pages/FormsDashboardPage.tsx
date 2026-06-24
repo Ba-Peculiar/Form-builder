@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FileText, Plus, Trash2 } from 'lucide-react'
-import { Alert, Badge, Card, ConfirmDialog, EmptyState, IconButton, LoadingState } from '../components/ui'
+import { Alert, Badge, Card, ConfirmDialog, EmptyState, IconButton, LoadingState, useToast } from '../components/ui'
 import { useCreateForm, useDeleteForm, useForms } from '../features/forms/queries'
 import type { FormSummary } from '../types/form'
 
@@ -28,6 +28,7 @@ export function FormsDashboardPage() {
   const createForm = useCreateForm()
   const deleteForm = useDeleteForm()
   const [formToDelete, setFormToDelete] = useState<FormSummary | null>(null)
+  const { showToast } = useToast()
 
   function handleCreateBlank() {
     createForm.mutate({ title: 'Untitled form' }, { onSuccess: (form) => navigate(`/forms/${form.id}`) })
@@ -35,7 +36,13 @@ export function FormsDashboardPage() {
 
   function handleConfirmDelete() {
     if (!formToDelete) return
-    deleteForm.mutate(formToDelete.id, { onSuccess: () => setFormToDelete(null) })
+    deleteForm.mutate(formToDelete.id, {
+      onSuccess: () => {
+        showToast('success', 'Form deleted')
+        setFormToDelete(null)
+      },
+      onError: (error) => showToast('error', error.message),
+    })
   }
 
   return (

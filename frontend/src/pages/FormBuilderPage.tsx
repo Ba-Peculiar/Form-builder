@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useForm as useReactHookForm } from 'react-hook-form'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { Copy, ExternalLink } from 'lucide-react'
 import { FieldEditor } from '../components/FieldEditor'
 import { FormTabs } from '../components/FormTabs'
-import { Alert, Button, Card, LoadingState, TextInput, Textarea } from '../components/ui'
+import { Alert, Button, Card, IconButton, LoadingState, TextInput, Textarea, useToast } from '../components/ui'
 import { useForm, usePublishForm, useUpdateForm } from '../features/forms/queries'
 import type { FieldConfig, UpdateFormInput } from '../types/form'
 
@@ -19,6 +20,7 @@ export function FormBuilderPage() {
   const { data: form, isLoading, isError } = useForm(formId ?? '')
   const updateForm = useUpdateForm(formId ?? '')
   const publishForm = usePublishForm(formId ?? '')
+  const { showToast } = useToast()
 
   const [fields, setFields] = useState<FieldConfig[]>([])
   const initializedFor = useRef<string | null>(null)
@@ -49,6 +51,7 @@ export function FormBuilderPage() {
   }
 
   const isReadOnly = form.status !== 'DRAFT'
+  const publicUrl = `${window.location.origin}/public/forms/${form.id}`
 
   const onSubmit = (values: BuilderFormValues) => {
     const input: UpdateFormInput = {
@@ -56,70 +59,60 @@ export function FormBuilderPage() {
       description: values.description || undefined,
       schema: { fields },
     }
-    updateForm.mutate(input)
+    updateForm.mutate(input, {
+      onSuccess: () => showToast('success', 'Form saved'),
+      onError: (error) => showToast('error', error.message),
+    })
+  }
+
+  function handlePublish() {
+    publishForm.mutate(undefined, {
+      onSuccess: (result) => showToast('success', `Form published as version ${result.version}`),
+      onError: (error) => showToast('error', error.message),
+    })
+  }
+
+  function handleCopyLink() {
+    navigator.clipboard.writeText(publicUrl)
+    showToast('success', 'Public link copied')
   }
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      {!isReadOnly && (
-        <div className="mb-4 flex items-center justify-end gap-2">
-          <Button type="submit" form={FORM_ELEMENT_ID} size="sm" isLoading={updateForm.isPending}>
-            Save
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            isLoading={publishForm.isPending}
-            onClick={() => publishForm.mutate()}
-          >
-            Publish
-          </Button>
-        </div>
-      )}
+      <div className="mb-4 flex items-center justify-end gap-2">
+        {isReadOnly && (
+          <>
+            <IconButton icon={Copy} label="Copy public link" onClick={handleCopyLink} />
+            <a
+              href={`/public/forms/${form.id}`}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="View public form"
+              title="View public form"
+              className="inline-flex items-center justify-center rounded-md p-1.5 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </>
+        )}
+
+        {!isReadOnly && (
+          <>
+            <Button type="submit" form={FORM_ELEMENT_ID} size="sm" isLoading={updateForm.isPending}>
+              Save
+            </Button>
+            <Button type="button" variant="secondary" size="sm" isLoading={publishForm.isPending} onClick={handlePublish}>
+              Publish
+            </Button>
+          </>
+        )}
+      </div>
 
       <FormTabs formId={form.id} active="questions" />
 
       {isReadOnly && (
         <div className="mb-4">
-          <Alert variant="warning" title="This form is published and read-only.">
-            <Link to={`/public/forms/${form.id}`} className="underline">
-              View public form
-            </Link>{' '}
-            ·{' '}
-            <Link to={`/forms/${form.id}/submissions`} className="underline">
-              View submissions
-            </Link>
-          </Alert>
-        </div>
-      )}
-
-      {publishForm.isError && (
-        <div className="mb-4">
-          <Alert variant="error">{publishForm.error.message}</Alert>
-        </div>
-      )}
-      {publishForm.isSuccess && (
-        <div className="mb-4">
-          <Alert variant="success" title={`Form published as version ${publishForm.data.version}.`}>
-            <Link to={`/public/forms/${publishForm.data.formId}`} className="underline">
-              View public form
-            </Link>{' '}
-            ·{' '}
-            <Link to={`/forms/${publishForm.data.formId}/submissions`} className="underline">
-              View submissions
-            </Link>
-          </Alert>
-        </div>
-      )}
-      {updateForm.isError && (
-        <div className="mb-4">
-          <Alert variant="error">{updateForm.error.message}</Alert>
-        </div>
-      )}
-      {updateForm.isSuccess && (
-        <div className="mb-4">
-          <Alert variant="success">Form saved.</Alert>
+          <Alert variant="warning">This form is published and read-only.</Alert>
         </div>
       )}
 
