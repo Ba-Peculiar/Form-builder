@@ -67,7 +67,7 @@ export async function updateForm(formId: string, input: UpdateFormInput) {
   }
 
   if (form.status !== 'DRAFT') {
-    throw new ApiError(400, 'Only draft forms can be updated. Create a new draft to make changes.')
+    throw new ApiError(400, 'Only draft forms can be updated.')
   }
 
   const latestVersion = await prisma.formVersion.findFirst({
@@ -94,4 +94,36 @@ export async function updateForm(formId: string, input: UpdateFormInput) {
       },
     }),
   ])
+}
+
+export async function publishForm(formId: string) {
+  const form = await prisma.form.findUnique({ where: { id: formId } })
+  if (!form) {
+    throw new NotFoundError('Form not found')
+  }
+
+  if (form.status !== 'DRAFT') {
+    throw new ApiError(400, 'Form is already published')
+  }
+
+  const draftVersion = await prisma.formVersion.findFirst({
+    where: { formId },
+    orderBy: { versionNumber: 'desc' },
+  })
+
+  if (!draftVersion) {
+    throw new ApiError(500, 'Draft form is missing its working version')
+  }
+
+  await prisma.form.update({
+    where: { id: formId },
+    data: { status: 'PUBLISHED', currentVersion: draftVersion.versionNumber },
+  })
+
+  return {
+    formId,
+    version: draftVersion.versionNumber,
+    status: 'PUBLISHED' as const,
+    publicUrl: `/public/forms/${formId}`,
+  }
 }

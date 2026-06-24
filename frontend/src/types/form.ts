@@ -64,3 +64,10 @@ export interface UpdateFormInput {
     fields: FieldConfig[]
   }
 }
+
+export interface PublishFormResponse {
+  formId: string
+  version: number
+  status: FormStatus
+  publicUrl: string
+}

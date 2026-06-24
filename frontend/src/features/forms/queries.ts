@@ -5,6 +5,7 @@ import type {
   CreateFormResponse,
   FormDetail,
   FormSummary,
+  PublishFormResponse,
   UpdateFormInput,
 } from '../../types/form'
 
@@ -43,6 +44,18 @@ export function useUpdateForm(formId: string) {
   return useMutation({
     mutationFn: (input: UpdateFormInput) =>
       api.put<{ message: string }>(`/forms/${formId}`, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: formsKey })
+      queryClient.invalidateQueries({ queryKey: formKey(formId) })
+    },
+  })
+}
+
+export function usePublishForm(formId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () => api.post<PublishFormResponse>(`/forms/${formId}/publish`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: formsKey })
       queryClient.invalidateQueries({ queryKey: formKey(formId) })

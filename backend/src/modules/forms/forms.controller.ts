@@ -31,3 +31,8 @@ export async function updateForm(req: Request, res: Response) {
   await formsService.updateForm(req.params.formId as string, input)
   res.status(200).json({ message: 'Form updated successfully' })
 }
+
+export async function publishForm(req: Request, res: Response) {
+  const result = await formsService.publishForm(req.params.formId as string)
+  res.status(200).json(result)
+}
