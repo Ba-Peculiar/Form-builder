@@ -61,28 +61,22 @@ export function FormBuilderPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <Link to="/" className="text-sm text-slate-500 hover:text-slate-900">
-          ← Back to forms
-        </Link>
-
-        {!isReadOnly && (
-          <div className="flex items-center gap-2">
-            <Button type="submit" form={FORM_ELEMENT_ID} size="sm" isLoading={updateForm.isPending}>
-              Save
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              isLoading={publishForm.isPending}
-              onClick={() => publishForm.mutate()}
-            >
-              Publish
-            </Button>
-          </div>
-        )}
-      </div>
+      {!isReadOnly && (
+        <div className="mb-4 flex items-center justify-end gap-2">
+          <Button type="submit" form={FORM_ELEMENT_ID} size="sm" isLoading={updateForm.isPending}>
+            Save
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            isLoading={publishForm.isPending}
+            onClick={() => publishForm.mutate()}
+          >
+            Publish
+          </Button>
+        </div>
+      )}
 
       <FormTabs formId={form.id} active="questions" />
 
