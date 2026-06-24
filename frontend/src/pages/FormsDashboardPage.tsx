@@ -104,6 +104,8 @@ export function FormsDashboardPage() {
 }
 
 function FormCard({ form, onDelete }: { form: FormSummary; onDelete: () => void }) {
+  const viewHref = form.status === 'PUBLISHED' ? `/public/forms/${form.id}` : `/forms/${form.id}`
+
   return (
     <Card padding="none" className="group relative overflow-hidden transition-shadow hover:shadow-md">
       <div className="absolute right-2 top-2 z-10 opacity-0 transition-opacity group-hover:opacity-100">
@@ -116,12 +118,12 @@ function FormCard({ form, onDelete }: { form: FormSummary; onDelete: () => void 
         />
       </div>
 
-      <Link to={`/forms/${form.id}`} className="block">
+      <Link to={viewHref} className="block">
         <FormPreviewThumbnail formId={form.id} />
       </Link>
 
       <div className="flex items-center justify-between gap-2 border-t border-slate-200 p-3">
-        <Link to={`/forms/${form.id}`} className="truncate text-sm font-medium text-slate-900">
+        <Link to={viewHref} className="truncate text-sm font-medium text-slate-900">
           {form.title}
         </Link>
         <div className="flex shrink-0 items-center gap-2">
@@ -132,10 +134,10 @@ function FormCard({ form, onDelete }: { form: FormSummary; onDelete: () => void 
       {form.status === 'PUBLISHED' && (
         <div className="border-t border-slate-100 px-3 py-2">
           <Link
-            to={`/public/forms/${form.id}`}
+            to={`/forms/${form.id}/submissions`}
             className="text-xs font-medium text-accent-600 hover:text-accent-700"
           >
-            View public form →
+            View responses →
           </Link>
         </div>
       )}

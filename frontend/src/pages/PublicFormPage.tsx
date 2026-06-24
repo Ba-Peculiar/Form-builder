@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { Check, Share2 } from 'lucide-react'
 import { Alert, Button, Card, LoadingState } from '../components/ui'
 import { FormRenderer, type RendererLayout } from '../components/FormRenderer'
 import { useCreateSubmission, usePublicForm } from '../features/forms/queries'
@@ -9,6 +10,13 @@ export function PublicFormPage() {
   const { data: form, isLoading, isError } = usePublicForm(formId ?? '')
   const createSubmission = useCreateSubmission(formId ?? '')
   const [layout, setLayout] = useState<RendererLayout>('standard')
+  const [copied, setCopied] = useState(false)
+
+  function handleShareLink() {
+    navigator.clipboard.writeText(window.location.href)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const fieldErrors = useMemo(() => {
     const entries = createSubmission.error?.errors ?? []
@@ -41,6 +49,11 @@ export function PublicFormPage() {
         </div>
 
         <div className="flex gap-2">
+          <Button type="button" size="sm" variant="secondary" onClick={handleShareLink}>
+            {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+            {copied ? 'Copied!' : 'Share link'}
+          </Button>
+
           <Button
             type="button"
             size="sm"
