@@ -6,7 +6,7 @@ interface LoadingStateProps {
 
 export function LoadingState({ label = 'Loading…' }: LoadingStateProps) {
   return (
-    <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-sm text-slate-500">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-white/70 text-sm text-slate-500">
       <BuildingLoader />
       {label}
     </div>

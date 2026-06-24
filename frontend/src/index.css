@@ -19,17 +19,29 @@
   --color-danger-700: #b91c1c;
 }
 
-@keyframes build-block {
-  0%,
-  100% {
-    transform: scaleY(0.35);
+@keyframes build-line {
+  0% {
+    width: 0%;
+    opacity: 1;
   }
-  50% {
-    transform: scaleY(1);
+  45% {
+    width: 100%;
+    opacity: 1;
+  }
+  70% {
+    width: 100%;
+    opacity: 1;
+  }
+  85% {
+    width: 100%;
+    opacity: 0;
+  }
+  100% {
+    width: 0%;
+    opacity: 0;
   }
 }
 
-.animate-build-block {
-  animation: build-block 1.2s ease-in-out infinite;
-  transform-origin: bottom;
+.animate-build-line {
+  animation: build-line 1.8s ease-in-out infinite;
 }
