@@ -71,3 +71,13 @@ export interface PublishFormResponse {
   status: FormStatus
   publicUrl: string
 }
+
+export interface PublicForm {
+  formId: string
+  version: number
+  title: string
+  description: string | null
+  schema: {
+    fields: FieldConfig[]
+  }
+}

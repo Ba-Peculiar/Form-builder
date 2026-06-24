@@ -33,17 +33,19 @@ export function FormsDashboardPage() {
       {forms && forms.length > 0 && (
         <ul className="divide-y divide-slate-200 rounded-md border border-slate-200 bg-white">
           {forms.map((form) => (
-            <li key={form.id}>
-              <Link
-                to={`/forms/${form.id}`}
-                className="flex items-center justify-between px-4 py-3 hover:bg-slate-50"
-              >
-                <span className="font-medium text-slate-900">{form.title}</span>
-                <span className="flex items-center gap-3 text-sm text-slate-500">
-                  {form.currentVersion && <span>v{form.currentVersion}</span>}
-                  <StatusBadge status={form.status} />
-                </span>
+            <li key={form.id} className="flex items-center justify-between px-4 py-3 hover:bg-slate-50">
+              <Link to={`/forms/${form.id}`} className="font-medium text-slate-900">
+                {form.title}
               </Link>
+              <span className="flex items-center gap-3 text-sm text-slate-500">
+                {form.currentVersion && <span>v{form.currentVersion}</span>}
+                <StatusBadge status={form.status} />
+                {form.status === 'PUBLISHED' && (
+                  <Link to={`/public/forms/${form.id}`} className="text-slate-900 underline">
+                    View
+                  </Link>
+                )}
+              </span>
             </li>
           ))}
         </ul>

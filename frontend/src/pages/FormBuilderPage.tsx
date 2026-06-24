@@ -59,7 +59,10 @@ export function FormBuilderPage() {
 
       {isReadOnly && (
         <p className="mt-4 rounded-md bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          This form is published and read-only.
+          This form is published and read-only.{' '}
+          <Link to={`/public/forms/${form.id}`} className="underline">
+            View public form
+          </Link>
         </p>
       )}
 
@@ -68,7 +71,10 @@ export function FormBuilderPage() {
       )}
       {publishForm.isSuccess && (
         <p className="mt-4 rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
-          Form published as version {publishForm.data.version}. Public URL: {publishForm.data.publicUrl}
+          Form published as version {publishForm.data.version}.{' '}
+          <Link to={`/public/forms/${publishForm.data.formId}`} className="underline">
+            View public form
+          </Link>
         </p>
       )}
 

@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import { FormBuilderPage } from './pages/FormBuilderPage'
 import { FormsDashboardPage } from './pages/FormsDashboardPage'
+import { PublicFormPage } from './pages/PublicFormPage'
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Routes>
           <Route path="/" element={<FormsDashboardPage />} />
           <Route path="/forms/:formId" element={<FormBuilderPage />} />
+          <Route path="/public/forms/:formId" element={<PublicFormPage />} />
         </Routes>
       </main>
     </div>

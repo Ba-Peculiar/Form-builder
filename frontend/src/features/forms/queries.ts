@@ -5,6 +5,7 @@ import type {
   CreateFormResponse,
   FormDetail,
   FormSummary,
+  PublicForm,
   PublishFormResponse,
   UpdateFormInput,
 } from '../../types/form'
@@ -48,6 +49,14 @@ export function useUpdateForm(formId: string) {
       queryClient.invalidateQueries({ queryKey: formsKey })
       queryClient.invalidateQueries({ queryKey: formKey(formId) })
     },
+  })
+}
+
+export function usePublicForm(formId: string) {
+  return useQuery({
+    queryKey: ['public-forms', formId] as const,
+    queryFn: () => api.get<PublicForm>(`/public/forms/${formId}`),
+    enabled: Boolean(formId),
   })
 }
 
