@@ -6,8 +6,8 @@ Built as a Full-Stack Developer Technical Assessment submission (Assignment A).
 
 ## Live Application
 
-- **Frontend:** https://form-builder-ebon-two.vercel.app
-- **Backend API:** https://form-builder-production-22bf.up.railway.app/api
+- **Frontend:** <https://form-builder-ebon-two.vercel.app>
+- **Backend API:** <https://form-builder-production-22bf.up.railway.app/api>
 
 No credentials are required — form creation, publishing, and submission are all open.
 
@@ -82,7 +82,7 @@ Open the printed local URL (Vite's default is `http://localhost:5173`).
 
 Three tables, all in PostgreSQL:
 
-```
+```text
 Form
   id              uuid, PK
   title           text
@@ -131,24 +131,24 @@ Submission
 
 ## Trade-Off Analysis
 
-**Simplifications made**
+### Simplifications made
 
 - Published forms are permanently locked rather than supporting a "create new draft from published form" flow (see Key Design Decisions above).
 - No authentication/authorization layer — anyone with the URL can create, publish, or view any form. Acceptable for an assessment; not acceptable as-is for a real product.
 - No pagination on `GET /api/forms` or `GET /api/forms/:id/submissions` — fine at assessment scale, would need it for a form with thousands of submissions.
 
-**Intentionally excluded**
+### Intentionally excluded
 
 - Client-side validation duplication (see Key Design Decisions) — AJV on the backend is the single source of truth.
 - A "checkbox group" (multi-value checkbox) field type — the assignment defines `checkbox` as a single boolean toggle; a multi-choice list is already covered by `select`.
 
-**Known limitations**
+### Known limitations
 
 - The number-field-as-digit-string decision (above) is a deliberate deviation from the assignment's literal "Min Value/Max Value" wording. It was made explicitly, with the trade-off discussed, rather than discovered late.
 - No automated test suite yet (Phase 10 of the implementation plan) — correctness was verified manually via `tsc`/build checks and `curl`-based API contract tests against a real database for every phase, but there's no regression safety net.
 - No rate limiting or request size limits on submission endpoints.
 
-**What I'd add or change with more time**
+### What I'd add or change with more time
 
 - A backend test suite (forms CRUD, validation edge cases, versioning/historical-integrity checks) and frontend tests for the renderer and submission flow.
 - Basic auth (even a single shared admin token) so the builder isn't fully public.
