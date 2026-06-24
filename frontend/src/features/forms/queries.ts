@@ -85,6 +85,17 @@ export function useSubmission(submissionId: string) {
   })
 }
 
+export function useDeleteForm() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (formId: string) => api.delete<void>(`/forms/${formId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: formsKey })
+    },
+  })
+}
+
 export function usePublishForm(formId: string) {
   const queryClient = useQueryClient()
 

@@ -1,16 +1,41 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { FileText, Plus } from 'lucide-react'
-import { Alert, Badge, Card, EmptyState, LoadingState } from '../components/ui'
-import { useCreateForm, useForms } from '../features/forms/queries'
+import { FileText, Plus, Trash2 } from 'lucide-react'
+import { Alert, Badge, Card, ConfirmDialog, EmptyState, IconButton, LoadingState } from '../components/ui'
+import { useCreateForm, useDeleteForm, useForms } from '../features/forms/queries'
 import type { FormSummary } from '../types/form'
+
+const GRADIENTS = [
+  'from-violet-400 to-purple-600',
+  'from-sky-400 to-blue-600',
+  'from-amber-400 to-orange-500',
+  'from-emerald-400 to-teal-600',
+  'from-rose-400 to-pink-600',
+  'from-indigo-400 to-violet-600',
+]
+
+function gradientForId(id: string): string {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0
+  }
+  return GRADIENTS[hash % GRADIENTS.length]
+}
 
 export function FormsDashboardPage() {
   const navigate = useNavigate()
   const { data: forms, isLoading, isError } = useForms()
   const createForm = useCreateForm()
+  const deleteForm = useDeleteForm()
+  const [formToDelete, setFormToDelete] = useState<FormSummary | null>(null)
 
   function handleCreateBlank() {
     createForm.mutate({ title: 'Untitled form' }, { onSuccess: (form) => navigate(`/forms/${form.id}`) })
+  }
+
+  function handleConfirmDelete() {
+    if (!formToDelete) return
+    deleteForm.mutate(formToDelete.id, { onSuccess: () => setFormToDelete(null) })
   }
 
   return (
@@ -52,21 +77,42 @@ export function FormsDashboardPage() {
         {forms && forms.length > 0 && (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {forms.map((form) => (
-              <FormCard key={form.id} form={form} />
+              <FormCard key={form.id} form={form} onDelete={() => setFormToDelete(form)} />
             ))}
           </div>
         )}
       </section>
+
+      <ConfirmDialog
+        open={formToDelete !== null}
+        title={`Delete "${formToDelete?.title}"?`}
+        description="This will also delete all of its responses. This can't be undone."
+        confirmLabel="Delete"
+        isLoading={deleteForm.isPending}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setFormToDelete(null)}
+      />
     </div>
   )
 }
 
-function FormCard({ form }: { form: FormSummary }) {
+function FormCard({ form, onDelete }: { form: FormSummary; onDelete: () => void }) {
   return (
-    <Card padding="none" className="overflow-hidden transition-shadow hover:shadow-md">
+    <Card padding="none" className="group relative overflow-hidden transition-shadow hover:shadow-md">
+      <div className="absolute right-2 top-2 z-10 opacity-0 transition-opacity group-hover:opacity-100">
+        <IconButton
+          icon={Trash2}
+          label="Delete form"
+          variant="danger"
+          className="bg-white/90 shadow-sm"
+          onClick={onDelete}
+        />
+      </div>
+
       <Link to={`/forms/${form.id}`} className="block">
-        <FormPreviewThumbnail />
+        <FormPreviewThumbnail formId={form.id} />
       </Link>
+
       <div className="flex items-center justify-between gap-2 border-t border-slate-200 p-3">
         <Link to={`/forms/${form.id}`} className="truncate text-sm font-medium text-slate-900">
           {form.title}
@@ -90,14 +136,10 @@ function FormCard({ form }: { form: FormSummary }) {
   )
 }
 
-function FormPreviewThumbnail() {
+function FormPreviewThumbnail({ formId }: { formId: string }) {
   return (
-    <div className="flex h-28 flex-col gap-1.5 bg-accent-50 p-3">
-      <div className="h-1.5 w-2/3 rounded bg-accent-300" />
-      <div className="mt-1 h-1 w-full rounded bg-white" />
-      <div className="h-1 w-5/6 rounded bg-white" />
-      <div className="h-1 w-4/6 rounded bg-white" />
-      <div className="mt-auto h-2 w-10 rounded bg-accent-300" />
+    <div className={`flex h-28 items-center justify-center bg-gradient-to-br ${gradientForId(formId)}`}>
+      <FileText className="h-10 w-10 text-white/90" />
     </div>
   )
 }

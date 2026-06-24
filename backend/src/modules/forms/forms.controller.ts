@@ -36,3 +36,8 @@ export async function publishForm(req: Request, res: Response) {
   const result = await formsService.publishForm(req.params.formId as string)
   res.status(200).json(result)
 }
+
+export async function deleteForm(req: Request, res: Response) {
+  await formsService.deleteForm(req.params.formId as string)
+  res.status(204).send()
+}

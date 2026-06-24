@@ -127,3 +127,16 @@ export async function publishForm(formId: string) {
     publicUrl: `/public/forms/${formId}`,
   }
 }
+
+export async function deleteForm(formId: string) {
+  const form = await prisma.form.findUnique({ where: { id: formId } })
+  if (!form) {
+    throw new NotFoundError('Form not found')
+  }
+
+  await prisma.$transaction([
+    prisma.submission.deleteMany({ where: { formId } }),
+    prisma.formVersion.deleteMany({ where: { formId } }),
+    prisma.form.delete({ where: { id: formId } }),
+  ])
+}
