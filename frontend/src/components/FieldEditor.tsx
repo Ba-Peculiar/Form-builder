@@ -226,24 +226,39 @@ function FieldRow({
       )}
 
       {field.type === 'select' && (
-        <div className="mt-3">
-          <label className="block text-sm font-medium text-slate-700">
-            Options (comma-separated)
-          </label>
-          <input
-            value={(field.options ?? []).join(', ')}
+        <div className="mt-3 space-y-2">
+          <label className="block text-sm font-medium text-slate-700">Options</label>
+          {(field.options ?? []).map((option, optIndex) => (
+            <div key={optIndex} className="flex items-center gap-2">
+              <input
+                value={option}
+                disabled={disabled}
+                onChange={(e) => {
+                  const next = [...(field.options ?? [])]
+                  next[optIndex] = e.target.value
+                  onChange({ options: next })
+                }}
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+                placeholder={`Option ${optIndex + 1}`}
+              />
+              <button
+                type="button"
+                onClick={() => onChange({ options: (field.options ?? []).filter((_, i) => i !== optIndex) })}
+                disabled={disabled}
+                className="text-sm text-red-600 hover:text-red-800 disabled:opacity-30"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => onChange({ options: [...(field.options ?? []), ''] })}
             disabled={disabled}
-            onChange={(e) =>
-              onChange({
-                options: e.target.value
-                  .split(',')
-                  .map((opt) => opt.trim())
-                  .filter((opt) => opt.length > 0),
-              })
-            }
-            className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-            placeholder="Option A, Option B, Option C"
-          />
+            className="rounded-md border border-dashed border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-600 hover:border-slate-400 disabled:opacity-50"
+          >
+            + Add option
+          </button>
         </div>
       )}
     </div>
