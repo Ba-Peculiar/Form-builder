@@ -18,3 +18,18 @@
   --color-danger-600: #dc2626;
   --color-danger-700: #b91c1c;
 }
+
+@keyframes build-block {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.animate-build-block {
+  animation: build-block 1.2s ease-in-out infinite;
+  transform-origin: bottom;
+}

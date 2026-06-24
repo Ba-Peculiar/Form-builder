@@ -1,4 +1,4 @@
-import { Spinner } from './Spinner'
+import { BuildingLoader } from './BuildingLoader'
 
 interface LoadingStateProps {
   label?: string
@@ -6,8 +6,8 @@ interface LoadingStateProps {
 
 export function LoadingState({ label = 'Loading…' }: LoadingStateProps) {
   return (
-    <div className="flex items-center justify-center gap-2 p-6 text-sm text-slate-500">
-      <Spinner size="sm" />
+    <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-sm text-slate-500">
+      <BuildingLoader />
       {label}
     </div>
   )
