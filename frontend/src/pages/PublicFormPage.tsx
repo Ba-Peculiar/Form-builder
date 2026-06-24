@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { FormRenderer, type RendererLayout } from '../components/FormRenderer'
-import { usePublicForm } from '../features/forms/queries'
+import { useCreateSubmission, usePublicForm } from '../features/forms/queries'
 
 export function PublicFormPage() {
   const { formId } = useParams<{ formId: string }>()
   const { data: form, isLoading, isError } = usePublicForm(formId ?? '')
+  const createSubmission = useCreateSubmission(formId ?? '')
   const [layout, setLayout] = useState<RendererLayout>('standard')
-  const [submitted, setSubmitted] = useState<Record<string, unknown> | null>(null)
 
   if (isLoading) {
     return <p className="p-6 text-slate-500">Loading form…</p>
@@ -52,13 +52,31 @@ export function PublicFormPage() {
       </div>
 
       <div className="mt-6 rounded-md border border-slate-200 bg-white p-6">
-        <FormRenderer fields={form.schema.fields} layout={layout} onSubmit={setSubmitted} />
+        <FormRenderer
+          fields={form.schema.fields}
+          layout={layout}
+          onSubmit={(data) => createSubmission.mutate(data)}
+        />
       </div>
 
-      {submitted && (
+      {createSubmission.isSuccess && (
         <div className="mt-4 rounded-md bg-green-50 p-4 text-sm text-green-800">
-          <p className="font-medium">Captured values (submission storage lands in a later phase):</p>
-          <pre className="mt-2 overflow-x-auto">{JSON.stringify(submitted, null, 2)}</pre>
+          Submission received. ID: {createSubmission.data.submissionId}
+        </div>
+      )}
+
+      {createSubmission.isError && (
+        <div className="mt-4 rounded-md bg-red-50 p-4 text-sm text-red-800">
+          <p className="font-medium">{createSubmission.error.message}</p>
+          {createSubmission.error.errors && createSubmission.error.errors.length > 0 && (
+            <ul className="mt-2 list-disc pl-5">
+              {createSubmission.error.errors.map((fieldError, index) => (
+                <li key={index}>
+                  {fieldError.field}: {fieldError.message}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </div>

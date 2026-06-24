@@ -72,6 +72,11 @@ export interface PublishFormResponse {
   publicUrl: string
 }
 
+export interface CreateSubmissionResponse {
+  submissionId: string
+  message: string
+}
+
 export interface PublicForm {
   formId: string
   version: number

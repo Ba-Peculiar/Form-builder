@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { api } from '../../lib/api'
+import { api, type ApiError } from '../../lib/api'
 import type {
   CreateFormInput,
   CreateFormResponse,
+  CreateSubmissionResponse,
   FormDetail,
   FormSummary,
   PublicForm,
@@ -57,6 +58,12 @@ export function usePublicForm(formId: string) {
     queryKey: ['public-forms', formId] as const,
     queryFn: () => api.get<PublicForm>(`/public/forms/${formId}`),
     enabled: Boolean(formId),
+  })
+}
+
+export function useCreateSubmission(formId: string) {
+  return useMutation<CreateSubmissionResponse, ApiError, Record<string, unknown>>({
+    mutationFn: (data) => api.post<CreateSubmissionResponse>(`/forms/${formId}/submissions`, data),
   })
 }
 
