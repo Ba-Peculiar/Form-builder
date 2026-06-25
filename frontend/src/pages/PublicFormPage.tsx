@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Check, Share2 } from 'lucide-react'
-import { Alert, Button, Card, LoadingState } from '../components/ui'
+import { Alert, Button, Card, LoadingState, useToast } from '../components/ui'
 import { FormRenderer, type RendererLayout } from '../components/FormRenderer'
 import { useCreateSubmission, usePublicForm } from '../features/forms/queries'
 
@@ -11,6 +11,14 @@ export function PublicFormPage() {
   const createSubmission = useCreateSubmission(formId ?? '')
   const [layout, setLayout] = useState<RendererLayout>('standard')
   const [copied, setCopied] = useState(false)
+  const { showToast } = useToast()
+
+  function handleSubmit(data: Record<string, unknown>) {
+    createSubmission.mutate(data, {
+      onSuccess: () => showToast('success', 'Submission received'),
+      onError: (error) => showToast('error', error.message),
+    })
+  }
 
   function handleShareLink() {
     navigator.clipboard.writeText(window.location.href)
@@ -80,7 +88,7 @@ export function PublicFormPage() {
               fields={form.schema.fields}
               layout={layout}
               fieldErrors={fieldErrors}
-              onSubmit={(data) => createSubmission.mutate(data)}
+              onSubmit={handleSubmit}
             />
           </Card>
         ) : (
@@ -88,22 +96,10 @@ export function PublicFormPage() {
             fields={form.schema.fields}
             layout={layout}
             fieldErrors={fieldErrors}
-            onSubmit={(data) => createSubmission.mutate(data)}
+            onSubmit={handleSubmit}
           />
         )}
       </div>
-
-      {createSubmission.isSuccess && (
-        <div className="mt-4">
-          <Alert variant="success">Submission received. ID: {createSubmission.data.submissionId}</Alert>
-        </div>
-      )}
-
-      {createSubmission.isError && (
-        <div className="mt-4">
-          <Alert variant="error">{createSubmission.error.message}</Alert>
-        </div>
-      )}
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { useCallback, useState, type ReactNode } from 'react'
 import { CheckCircle2, XCircle } from 'lucide-react'
+import { Card } from './Card'
 import { ToastContext, type ToastVariant } from './ToastContext'
 
 interface ToastItem {
@@ -11,36 +12,31 @@ interface ToastItem {
 let nextId = 0
 
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<ToastItem[]>([])
+  const [toast, setToast] = useState<ToastItem | null>(null)
 
   const showToast = useCallback((variant: ToastVariant, message: string) => {
     const id = nextId++
-    setToasts((prev) => [...prev, { id, variant, message }])
+    setToast({ id, variant, message })
     setTimeout(() => {
-      setToasts((prev) => prev.filter((toast) => toast.id !== id))
-    }, 3500)
+      setToast((current) => (current?.id === id ? null : current))
+    }, 2000)
   }, [])
 
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={`flex items-center gap-2 rounded-lg border bg-white px-4 py-3 text-sm shadow-lg ${
-              toast.variant === 'success' ? 'border-success-200 text-success-700' : 'border-danger-200 text-danger-700'
-            }`}
-          >
+      {toast && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+          <Card className="flex w-full max-w-sm flex-col items-center gap-3 py-8 text-center">
             {toast.variant === 'success' ? (
-              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <CheckCircle2 className="h-10 w-10 text-success-600" />
             ) : (
-              <XCircle className="h-4 w-4 shrink-0" />
+              <XCircle className="h-10 w-10 text-danger-600" />
             )}
-            {toast.message}
-          </div>
-        ))}
-      </div>
+            <p className="text-base font-medium text-slate-900">{toast.message}</p>
+          </Card>
+        </div>
+      )}
     </ToastContext.Provider>
   )
 }
