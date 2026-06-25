@@ -5,25 +5,6 @@ import { Alert, Badge, Card, ConfirmDialog, EmptyState, IconButton, LoadingState
 import { useCreateForm, useDeleteForm, useForms } from '../features/forms/queries'
 import type { FormSummary } from '../types/form'
 
-const GRADIENTS = [
-  'from-accent-300 to-accent-600',
-  'from-accent-400 to-accent-700',
-  'from-accent-200 to-accent-500',
-  'from-accent-500 to-accent-700',
-  'from-stone-400 to-accent-600',
-  'from-accent-300 to-stone-600',
-  'from-accent-400 to-accent-600',
-  'from-accent-200 to-accent-600',
-]
-
-function gradientForId(id: string): string {
-  let hash = 0
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) >>> 0
-  }
-  return GRADIENTS[hash % GRADIENTS.length]
-}
-
 export function FormsDashboardPage() {
   const navigate = useNavigate()
   const { data: forms, isLoading, isError } = useForms()
@@ -150,7 +131,7 @@ function FormCard({ form, onDelete }: { form: FormSummary; onDelete: () => void 
       </div>
 
       <Link to={viewHref} className="block">
-        <FormPreviewThumbnail formId={form.id} />
+        <FormPreviewThumbnail />
       </Link>
 
       <div className="flex items-center justify-between gap-2 border-t border-stone-200 p-3">
@@ -176,10 +157,10 @@ function FormCard({ form, onDelete }: { form: FormSummary; onDelete: () => void 
   )
 }
 
-function FormPreviewThumbnail({ formId }: { formId: string }) {
+function FormPreviewThumbnail() {
   return (
-    <div className={`flex h-28 items-center justify-center bg-gradient-to-br ${gradientForId(formId)}`}>
-      <FileText className="h-10 w-10 text-white/90" />
+    <div className="flex h-28 items-center justify-center bg-[#f1e3d1]">
+      <FileText className="h-10 w-10 text-accent-700/40" />
     </div>
   )
 }
