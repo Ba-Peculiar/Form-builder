@@ -6,14 +6,14 @@ import { useCreateForm, useDeleteForm, useForms } from '../features/forms/querie
 import type { FormSummary } from '../types/form'
 
 const GRADIENTS = [
-  'from-amber-300 to-amber-600',
-  'from-orange-400 to-red-500',
-  'from-rose-400 to-rose-700',
-  'from-yellow-400 to-orange-600',
-  'from-red-400 to-orange-700',
+  'from-accent-300 to-accent-600',
   'from-accent-400 to-accent-700',
-  'from-orange-300 to-rose-600',
-  'from-amber-500 to-red-600',
+  'from-accent-200 to-accent-500',
+  'from-accent-500 to-accent-700',
+  'from-stone-400 to-accent-600',
+  'from-accent-300 to-stone-600',
+  'from-accent-400 to-accent-600',
+  'from-accent-200 to-accent-600',
 ]
 
 function gradientForId(id: string): string {
