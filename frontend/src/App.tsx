@@ -1,4 +1,4 @@
-import { Link, Route, Routes } from 'react-router-dom'
+import { Link, Route, Routes, useLocation } from 'react-router-dom'
 import { ClipboardList } from 'lucide-react'
 import { FormBuilderPage } from './pages/FormBuilderPage'
 import { FormsDashboardPage } from './pages/FormsDashboardPage'
@@ -8,13 +8,23 @@ import { SubmissionDetailPage } from './pages/SubmissionDetailPage'
 import { SubmissionListPage } from './pages/SubmissionListPage'
 
 function App() {
+  const location = useLocation()
+  const isPublicForm = location.pathname.startsWith('/public/forms/')
+
   return (
     <div className="min-h-screen bg-stone-100 text-stone-900">
       <header className="border-b border-stone-200 bg-white px-6 py-4">
-        <Link to="/" className="flex items-center gap-2">
-          <ClipboardList className="h-5 w-5 text-accent-600" />
-          <h1 className="text-xl font-semibold">Dynamic Form Builder</h1>
-        </Link>
+        {isPublicForm ? (
+          <div className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-accent-600" />
+            <h1 className="text-xl font-semibold">Dynamic Form Builder</h1>
+          </div>
+        ) : (
+          <Link to="/" className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-accent-600" />
+            <h1 className="text-xl font-semibold">Dynamic Form Builder</h1>
+          </Link>
+        )}
       </header>
       <main>
         <Routes>
