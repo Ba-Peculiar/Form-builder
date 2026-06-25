@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Check, Share2 } from 'lucide-react'
 import { Alert, Button, Card, LoadingState, useToast } from '../components/ui'
+import { FormTabs } from '../components/FormTabs'
 import { FormRenderer, type RendererLayout } from '../components/FormRenderer'
 import { useCreateSubmission, usePublicForm } from '../features/forms/queries'
 
@@ -49,7 +50,11 @@ export function PublicFormPage() {
         ← Back to forms
       </Link>
 
-      <div className="mt-4 h-2 rounded-t-xl bg-accent-600" />
+      <div className="mt-4">
+        <FormTabs formId={form.formId} active="questions" />
+      </div>
+
+      <div className="h-2 rounded-t-xl bg-accent-600" />
       <div className="flex items-center justify-between rounded-b-xl border border-t-0 border-slate-200 bg-white px-6 py-5">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">{form.title}</h1>

@@ -12,10 +12,10 @@ export function FormTabs({ formId, active }: FormTabsProps) {
   return (
     <div className="mb-4 flex gap-6 border-b border-slate-200 text-sm font-medium">
       <Link to={`/forms/${formId}`} className={active === 'questions' ? ACTIVE_CLASS : INACTIVE_CLASS}>
-        Questions
+        Form
       </Link>
       <Link to={`/forms/${formId}/submissions`} className={active === 'responses' ? ACTIVE_CLASS : INACTIVE_CLASS}>
-        Responses
+        Submissions
       </Link>
     </div>
   )
