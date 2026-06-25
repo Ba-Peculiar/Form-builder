@@ -146,6 +146,8 @@ Submission
 - A true "republish" flow — create version 2 of a form while preserving version 1 and its historical submissions, instead of locking forms permanently.
 - Pagination and search on the forms list and submission list once either could realistically grow large.
 - Export submissions as CSV from the Submission List page.
+- Add collaborations and teams
+- integrate email for every submission to form creator
 
 ---
 

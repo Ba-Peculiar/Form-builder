@@ -91,6 +91,7 @@ export async function updateForm(formId: string, input: UpdateFormInput) {
           title: input.title,
           fields: input.fields ?? fromJson(latestVersion.schema).fields,
           groups: input.groups ?? fromJson(latestVersion.schema).groups,
+          ungroupedOrder: input.ungroupedOrder ?? fromJson(latestVersion.schema).ungroupedOrder,
         }),
       },
     }),

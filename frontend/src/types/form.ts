@@ -31,6 +31,7 @@ export interface FormSchema {
   title: string
   fields: FieldConfig[]
   groups?: FieldGroup[]
+  ungroupedOrder?: number
 }
 
 export type FormStatus = 'DRAFT' | 'PUBLISHED'
@@ -71,6 +72,7 @@ export interface UpdateFormInput {
   schema: {
     fields: FieldConfig[]
     groups?: FieldGroup[]
+    ungroupedOrder?: number
   }
 }
 
@@ -94,6 +96,7 @@ export interface PublicForm {
   schema: {
     fields: FieldConfig[]
     groups?: FieldGroup[]
+    ungroupedOrder?: number
   }
 }
 

@@ -28,6 +28,7 @@ export interface UpdateFormInput {
   description?: string
   fields?: FieldConfig[]
   groups?: FieldGroup[]
+  ungroupedOrder?: number
 }
 
 export function validateCreateForm(body: unknown): CreateFormInput {
@@ -66,12 +67,20 @@ export function validateUpdateForm(body: unknown): UpdateFormInput {
 
   let fields: FieldConfig[] | undefined
   let groups: FieldGroup[] | undefined
+  let ungroupedOrder: number | undefined
 
   if (data.schema !== undefined) {
     const schema = data.schema as Record<string, unknown>
     fields = validateFields(schema.fields, errors)
     if (schema.groups !== undefined) {
       groups = validateGroups(schema.groups, errors)
+    }
+    if (schema.ungroupedOrder !== undefined) {
+      if (typeof schema.ungroupedOrder !== 'number' || !Number.isFinite(schema.ungroupedOrder)) {
+        errors.push({ field: 'schema.ungroupedOrder', message: 'ungroupedOrder must be a number' })
+      } else {
+        ungroupedOrder = schema.ungroupedOrder
+      }
     }
   }
 
@@ -99,6 +108,7 @@ export function validateUpdateForm(body: unknown): UpdateFormInput {
     description: data.description as string | undefined,
     fields,
     groups,
+    ungroupedOrder,
   }
 }
 

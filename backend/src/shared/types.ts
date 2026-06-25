@@ -31,4 +31,5 @@ export interface FormSchema {
   title: string
   fields: FieldConfig[]
   groups?: FieldGroup[]
+  ungroupedOrder?: number
 }

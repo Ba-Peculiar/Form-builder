@@ -62,6 +62,7 @@ export function SubmissionDetailPage() {
             <FormRenderer
               fields={form.schema.fields}
               groups={form.schema.groups}
+              ungroupedOrder={form.schema.ungroupedOrder}
               layout={layout}
               defaultValues={submission.data}
               readOnly
@@ -71,6 +72,7 @@ export function SubmissionDetailPage() {
           <FormRenderer
             fields={form.schema.fields}
             groups={form.schema.groups}
+            ungroupedOrder={form.schema.ungroupedOrder}
             layout={layout}
             defaultValues={submission.data}
             readOnly

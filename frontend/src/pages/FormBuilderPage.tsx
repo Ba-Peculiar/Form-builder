@@ -22,6 +22,7 @@ export function FormBuilderPage() {
 
   const [fields, setFields] = useState<FieldConfig[]>([])
   const [groups, setGroups] = useState<FieldGroup[]>([])
+  const [ungroupedOrder, setUngroupedOrder] = useState<number | undefined>(undefined)
   const initializedFor = useRef<string | null>(null)
 
   const {
@@ -34,6 +35,7 @@ export function FormBuilderPage() {
     if (form && initializedFor.current !== form.id) {
       setFields(form.schema.fields)
       setGroups(form.schema.groups ?? [])
+      setUngroupedOrder(form.schema.ungroupedOrder)
       initializedFor.current = form.id
     }
   }, [form])
@@ -60,7 +62,7 @@ export function FormBuilderPage() {
     const input: UpdateFormInput = {
       title: values.title,
       description: values.description || undefined,
-      schema: { fields, groups },
+      schema: { fields, groups, ungroupedOrder },
     }
     updateForm.mutate(input, {
       onSuccess: () => showToast('success', 'Form saved'),
@@ -110,7 +112,14 @@ export function FormBuilderPage() {
           </div>
         </Card>
 
-        <FieldEditor fields={fields} groups={groups} onFieldsChange={setFields} onGroupsChange={setGroups} />
+        <FieldEditor
+          fields={fields}
+          groups={groups}
+          ungroupedOrder={ungroupedOrder}
+          onFieldsChange={setFields}
+          onGroupsChange={setGroups}
+          onUngroupedOrderChange={setUngroupedOrder}
+        />
       </form>
     </div>
   )
