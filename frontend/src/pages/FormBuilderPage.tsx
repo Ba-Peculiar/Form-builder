@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useForm as useReactHookForm } from 'react-hook-form'
 import { Navigate, useParams } from 'react-router-dom'
 import { FieldEditor } from '../components/FieldEditor'
-import { FormTabs } from '../components/FormTabs'
 import { Alert, Button, Card, LoadingState, TextInput, Textarea, useToast } from '../components/ui'
 import { useForm, usePublishForm, useUpdateForm } from '../features/forms/queries'
 import type { FieldConfig, UpdateFormInput } from '../types/form'
@@ -84,8 +83,6 @@ export function FormBuilderPage() {
           Publish
         </Button>
       </div>
-
-      <FormTabs formId={form.id} active="questions" />
 
       <form id={FORM_ELEMENT_ID} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card padding="none" className="overflow-hidden">
