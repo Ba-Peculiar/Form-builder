@@ -7,47 +7,51 @@ interface FieldRendererProps {
   field: FieldConfig
   register: UseFormRegister<Record<string, unknown>>
   error?: string
+  compact?: boolean
 }
 
-export function FieldRenderer({ field, register, error }: FieldRendererProps) {
-  if (field.type === 'checkbox') {
-    return (
-      <div className="flex flex-col">
-        <FieldInput field={field} register={register} error={error} />
-        <FieldError message={error} />
-      </div>
-    )
-  }
+export function FieldRenderer({ field, register, error, compact }: FieldRendererProps) {
+  const showLabel = field.type !== 'checkbox' && !compact
 
   return (
     <div className="flex flex-col">
-      <label htmlFor={field.id} className="mb-1 text-sm font-medium text-slate-700">
-        {field.label}
-        {field.required && <span className="text-danger-600"> *</span>}
-      </label>
-      <FieldInput field={field} register={register} error={error} />
+      {showLabel && (
+        <label htmlFor={field.id} className="mb-1 text-sm font-medium text-slate-700">
+          {field.label}
+          {field.required && <span className="text-danger-600"> *</span>}
+        </label>
+      )}
+      <FieldInput field={field} register={register} error={error} compact={compact} />
       <FieldError message={error} />
     </div>
   )
 }
 
-function inputClass(error: string | undefined, padding: string) {
-  return `rounded-lg border py-2 text-sm focus:outline-none ${padding} ${
-    error
-      ? 'border-danger-300 focus:border-danger-500 focus:ring-2 focus:ring-danger-200'
+function inputClass(error: string | undefined, padding: string, compact?: boolean) {
+  const size = compact ? 'rounded-xl border py-3 text-sm focus:outline-none' : 'rounded-lg border py-2 text-sm focus:outline-none'
+  const tone = error
+    ? 'border-danger-300 focus:border-danger-500 focus:ring-2 focus:ring-danger-200'
+    : compact
+      ? 'border-slate-200 focus:border-accent-500 focus:ring-2 focus:ring-accent-200'
       : 'border-slate-300 focus:border-accent-500 focus:ring-2 focus:ring-accent-200'
-  }`
+  return `${size} ${padding} ${tone}`
 }
 
-function FieldInput({ field, register, error }: FieldRendererProps) {
+function placeholderLabel(field: FieldConfig) {
+  return field.required ? `${field.label} *` : field.label
+}
+
+function FieldInput({ field, register, error, compact }: FieldRendererProps) {
   switch (field.type) {
     case 'textarea':
       return (
         <textarea
           id={field.id}
           required={field.required}
-          rows={3}
-          className={`w-full resize-none bg-slate-50 ${inputClass(error, 'pl-3 pr-3')}`}
+          rows={compact ? 4 : 3}
+          placeholder={compact ? placeholderLabel(field) : undefined}
+          aria-label={compact ? field.label : undefined}
+          className={`w-full resize-none ${compact ? 'bg-white' : 'bg-slate-50'} ${inputClass(error, 'pl-3 pr-3', compact)}`}
           {...register(field.id)}
         />
       )
@@ -62,7 +66,9 @@ function FieldInput({ field, register, error }: FieldRendererProps) {
             inputMode="numeric"
             pattern="[0-9]*"
             required={field.required}
-            className={`w-full ${inputClass(error, 'pl-9 pr-3')}`}
+            placeholder={compact ? placeholderLabel(field) : undefined}
+            aria-label={compact ? field.label : undefined}
+            className={`w-full ${inputClass(error, 'pl-9 pr-3', compact)}`}
             {...register(field.id)}
           />
         </div>
@@ -76,7 +82,9 @@ function FieldInput({ field, register, error }: FieldRendererProps) {
             id={field.id}
             type="email"
             required={field.required}
-            className={`w-full ${inputClass(error, 'pl-9 pr-3')}`}
+            placeholder={compact ? placeholderLabel(field) : undefined}
+            aria-label={compact ? field.label : undefined}
+            className={`w-full ${inputClass(error, 'pl-9 pr-3', compact)}`}
             {...register(field.id)}
           />
         </div>
@@ -90,7 +98,8 @@ function FieldInput({ field, register, error }: FieldRendererProps) {
             id={field.id}
             type="date"
             required={field.required}
-            className={`w-full ${inputClass(error, 'pl-9 pr-3')}`}
+            aria-label={compact ? field.label : undefined}
+            className={`w-full ${inputClass(error, 'pl-9 pr-3', compact)}`}
             {...register(field.id)}
           />
         </div>
@@ -102,10 +111,11 @@ function FieldInput({ field, register, error }: FieldRendererProps) {
           <select
             id={field.id}
             required={field.required}
-            className={`w-full appearance-none ${inputClass(error, 'pl-3 pr-9')}`}
+            aria-label={compact ? field.label : undefined}
+            className={`w-full appearance-none ${inputClass(error, 'pl-3 pr-9', compact)}`}
             {...register(field.id)}
           >
-            <option value="">Select…</option>
+            <option value="">{compact ? placeholderLabel(field) : 'Select…'}</option>
             {(field.options ?? []).map((option) => (
               <option key={option} value={option}>
                 {option}
@@ -137,7 +147,9 @@ function FieldInput({ field, register, error }: FieldRendererProps) {
           id={field.id}
           type="text"
           required={field.required}
-          className={`w-full ${inputClass(error, 'pl-3 pr-3')}`}
+          placeholder={compact ? placeholderLabel(field) : undefined}
+          aria-label={compact ? field.label : undefined}
+          className={`w-full ${inputClass(error, 'pl-3 pr-3', compact)}`}
           {...register(field.id)}
         />
       )
