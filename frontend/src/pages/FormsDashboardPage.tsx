@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, ClipboardList, FileText, Plus, Trash2 } from 'lucide-react'
+import { ClipboardList, FileText, Plus, Trash2 } from 'lucide-react'
 import { Alert, Badge, Card, ConfirmDialog, EmptyState, IconButton, LoadingState, useToast } from '../components/ui'
 import { useCreateForm, useDeleteForm, useForms } from '../features/forms/queries'
 import type { FormSummary } from '../types/form'
@@ -45,13 +45,9 @@ export function FormsDashboardPage() {
     })
   }
 
-  function scrollToForms() {
-    document.getElementById('your-forms')?.scrollIntoView({ behavior: 'smooth' })
-  }
-
   return (
     <div className="mx-auto max-w-5xl p-6">
-      <DashboardHero onCreate={handleCreateBlank} onViewDrafts={scrollToForms} isCreating={createForm.isPending} />
+      <DashboardHero onCreate={handleCreateBlank} isCreating={createForm.isPending} />
 
       {createForm.isError && (
         <div className="mt-4 max-w-sm">
@@ -59,7 +55,7 @@ export function FormsDashboardPage() {
         </div>
       )}
 
-      <section id="your-forms" className="mt-10">
+      <section className="mt-10">
         <h2 className="mb-3 text-sm font-medium text-stone-600">Your forms</h2>
 
         {isLoading && <LoadingState label="Loading forms…" />}
@@ -97,11 +93,9 @@ export function FormsDashboardPage() {
 
 function DashboardHero({
   onCreate,
-  onViewDrafts,
   isCreating,
 }: {
   onCreate: () => void
-  onViewDrafts: () => void
   isCreating: boolean
 }) {
   return (
@@ -131,14 +125,6 @@ function DashboardHero({
           >
             <Plus className="h-4 w-4" />
             {isCreating ? 'Creating…' : 'Create a new form'}
-          </button>
-          <button
-            type="button"
-            onClick={onViewDrafts}
-            className="inline-flex items-center gap-2 rounded-lg border border-white/40 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-          >
-            Edit your drafts
-            <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       </div>
