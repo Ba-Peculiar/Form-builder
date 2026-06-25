@@ -197,6 +197,7 @@ export function FieldEditor({
               onFieldChange={updateField}
               onFieldRemove={removeField}
               onReorder={reorderContainer}
+              onAddField={addFieldToContainer}
             />
           ) : (
             <div key={UNGROUPED_ID} className="space-y-3">
@@ -231,25 +232,14 @@ export function FieldEditor({
                 onFieldChange={updateField}
                 onFieldRemove={removeField}
                 onReorder={reorderContainer}
+                onAddField={addFieldToContainer}
               />
             </div>
           ),
         )}
       </div>
 
-      <div className="mt-4 flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => {
-            const last = unifiedOrder[unifiedOrder.length - 1]
-            addFieldToContainer(last?.kind === 'group' ? last.group.id : UNGROUPED_ID)
-          }}
-          disabled={disabled}
-          className="inline-flex items-center gap-2 rounded-full bg-accent-600 px-4 py-2 text-sm font-medium text-white shadow-md transition-colors hover:bg-accent-700 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <Plus className="h-4 w-4" />
-          Add field
-        </button>
+      <div className="mt-4 flex justify-end">
         <button
           type="button"
           onClick={addGroup}
@@ -290,6 +280,7 @@ interface FieldGroupSectionProps {
   onFieldChange: (id: string, patch: Partial<FieldConfig>) => void
   onFieldRemove: (id: string) => void
   onReorder: (containerId: string, reordered: FieldConfig[]) => void
+  onAddField: (containerId: string) => void
 }
 
 function FieldGroupSection({
@@ -306,6 +297,7 @@ function FieldGroupSection({
   onFieldChange,
   onFieldRemove,
   onReorder,
+  onAddField,
 }: FieldGroupSectionProps) {
   return (
     <div className="space-y-3 rounded-xl border border-dashed border-stone-300 p-4">
@@ -337,6 +329,7 @@ function FieldGroupSection({
         onFieldChange={onFieldChange}
         onFieldRemove={onFieldRemove}
         onReorder={onReorder}
+        onAddField={onAddField}
       />
     </div>
   )
@@ -350,6 +343,7 @@ interface SortableFieldListProps {
   onFieldChange: (id: string, patch: Partial<FieldConfig>) => void
   onFieldRemove: (id: string) => void
   onReorder: (containerId: string, reordered: FieldConfig[]) => void
+  onAddField: (containerId: string) => void
 }
 
 function SortableFieldList({
@@ -360,6 +354,7 @@ function SortableFieldList({
   onFieldChange,
   onFieldRemove,
   onReorder,
+  onAddField,
 }: SortableFieldListProps) {
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -393,6 +388,18 @@ function SortableFieldList({
           </div>
         </SortableContext>
       </DndContext>
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => onAddField(containerId)}
+          className="inline-flex items-center gap-1.5 rounded-full bg-accent-600 px-3.5 py-1.5 text-sm font-medium text-white shadow-md transition-colors hover:bg-accent-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add field
+        </button>
+      </div>
     </div>
   )
 }
