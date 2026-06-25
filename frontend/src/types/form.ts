@@ -18,6 +18,7 @@ export interface FieldConfig {
   label: string
   type: FieldType
   order: number
+  globalOrder?: number
   groupId?: string
   required?: boolean
   minLength?: number

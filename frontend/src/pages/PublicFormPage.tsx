@@ -70,7 +70,6 @@ export function PublicFormPage() {
             <FormRenderer
               fields={form.schema.fields}
               groups={form.schema.groups}
-              ungroupedOrder={form.schema.ungroupedOrder}
               layout={layout}
               fieldErrors={fieldErrors}
               onSubmit={handleSubmit}
@@ -80,7 +79,6 @@ export function PublicFormPage() {
           <FormRenderer
             fields={form.schema.fields}
             groups={form.schema.groups}
-            ungroupedOrder={form.schema.ungroupedOrder}
             layout={layout}
             fieldErrors={fieldErrors}
             onSubmit={handleSubmit}

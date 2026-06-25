@@ -14,6 +14,7 @@ import { Button, Card, ConfirmDialog, IconButton, Select, Switch, TextInput } fr
 import type { FieldConfig, FieldGroup, FieldType } from '../types/form'
 
 const UNGROUPED_ID = '__ungrouped__'
+const MAX_ORDER = 1_000_000
 
 const FIELD_TYPES: { value: FieldType; label: string }[] = [
   { value: 'text', label: 'Text' },
@@ -56,67 +57,79 @@ function buildContainers(fields: FieldConfig[], groups: FieldGroup[]) {
   return byGroup
 }
 
-function renumberAllContainers(fields: FieldConfig[]): FieldConfig[] {
+// Only renumber fields within their sections (grouped fields). Ungrouped fields
+// carry their own globalOrder for inter-section positioning, which must not change here.
+function renumberGroupedFields(fields: FieldConfig[]): FieldConfig[] {
   const counters = new Map<string, number>()
   return fields.map((field) => {
-    const key = field.groupId ?? UNGROUPED_ID
-    const next = (counters.get(key) ?? 0) + 1
-    counters.set(key, next)
+    if (!field.groupId) return field
+    const next = (counters.get(field.groupId) ?? 0) + 1
+    counters.set(field.groupId, next)
     return { ...field, order: next }
   })
 }
 
-type UnifiedEntry = { kind: 'group'; group: FieldGroup } | { kind: 'ungrouped' }
+type UnifiedEntry = { kind: 'group'; group: FieldGroup } | { kind: 'field'; field: FieldConfig }
 
-function buildUnifiedOrder(groups: FieldGroup[], ungroupedOrder: number | undefined): UnifiedEntry[] {
-  const entries: { entry: UnifiedEntry; key: number }[] = groups.map((group) => ({
-    entry: { kind: 'group', group },
-    key: group.order,
-  }))
-  entries.push({ entry: { kind: 'ungrouped' }, key: ungroupedOrder ?? Infinity })
-  entries.sort((a, b) => a.key - b.key)
+function buildUnifiedOrder(fields: FieldConfig[], groups: FieldGroup[]): UnifiedEntry[] {
+  const ungroupedFields = fields.filter((f) => !f.groupId)
+  const entries: { entry: UnifiedEntry; key: number; tiebreak: number }[] = [
+    ...groups.map((group) => ({ entry: { kind: 'group' as const, group }, key: group.order, tiebreak: 0 })),
+    ...ungroupedFields.map((field) => ({
+      entry: { kind: 'field' as const, field },
+      key: field.globalOrder ?? MAX_ORDER,
+      tiebreak: field.order,
+    })),
+  ]
+  entries.sort((a, b) => a.key - b.key || a.tiebreak - b.tiebreak)
   return entries.map((e) => e.entry)
 }
 
-function renumberUnified(entries: UnifiedEntry[]): { groups: FieldGroup[]; ungroupedOrder: number } {
-  const groups: FieldGroup[] = []
-  let ungroupedOrder = entries.length
+function renumberUnified(
+  entries: UnifiedEntry[],
+  allFields: FieldConfig[],
+): { groups: FieldGroup[]; fields: FieldConfig[] } {
+  const newGroups: FieldGroup[] = []
+  const globalOrderMap = new Map<string, number>()
+
   entries.forEach((entry, index) => {
     if (entry.kind === 'group') {
-      groups.push({ ...entry.group, order: index + 1 })
+      newGroups.push({ ...entry.group, order: index + 1 })
     } else {
-      ungroupedOrder = index + 1
+      globalOrderMap.set(entry.field.id, index + 1)
     }
   })
-  return { groups, ungroupedOrder }
+
+  const newFields = allFields.map((field) => {
+    const go = globalOrderMap.get(field.id)
+    return go !== undefined ? { ...field, globalOrder: go } : field
+  })
+
+  return { groups: newGroups, fields: newFields }
 }
 
 interface FieldEditorProps {
   fields: FieldConfig[]
   groups: FieldGroup[]
-  ungroupedOrder?: number
   onFieldsChange: (fields: FieldConfig[]) => void
   onGroupsChange: (groups: FieldGroup[]) => void
-  onUngroupedOrderChange: (order: number) => void
   disabled?: boolean
 }
 
-export function FieldEditor({
-  fields,
-  groups,
-  ungroupedOrder,
-  onFieldsChange,
-  onGroupsChange,
-  onUngroupedOrderChange,
-  disabled,
-}: FieldEditorProps) {
+export function FieldEditor({ fields, groups, onFieldsChange, onGroupsChange, disabled }: FieldEditorProps) {
   const [groupToDelete, setGroupToDelete] = useState<FieldGroup | null>(null)
 
   const containers = buildContainers(fields, groups)
-  const unifiedOrder = buildUnifiedOrder(groups, ungroupedOrder)
+  const unifiedOrder = buildUnifiedOrder(fields, groups)
+
+  function applyUnified(entries: UnifiedEntry[], allFields: FieldConfig[] = fields) {
+    const next = renumberUnified(entries, allFields)
+    onGroupsChange(next.groups)
+    onFieldsChange(next.fields)
+  }
 
   function updateField(id: string, patch: Partial<FieldConfig>) {
-    onFieldsChange(renumberAllContainers(fields.map((field) => (field.id === id ? { ...field, ...patch } : field))))
+    onFieldsChange(renumberGroupedFields(fields.map((field) => (field.id === id ? { ...field, ...patch } : field))))
   }
 
   function updateLabel(id: string, label: string) {
@@ -125,7 +138,14 @@ export function FieldEditor({
   }
 
   function removeField(id: string) {
-    onFieldsChange(renumberAllContainers(fields.filter((field) => field.id !== id)))
+    const removedField = fields.find((f) => f.id === id)
+    const newFields = fields.filter((f) => f.id !== id)
+    if (removedField && !removedField.groupId) {
+      const newUnified = unifiedOrder.filter((e) => e.kind !== 'field' || e.field.id !== id)
+      applyUnified(newUnified, newFields)
+    } else {
+      onFieldsChange(renumberGroupedFields(newFields))
+    }
   }
 
   function addFieldToContainer(containerId: string) {
@@ -136,30 +156,38 @@ export function FieldEditor({
       label,
       type: 'text',
       order: fields.length + 1,
-      groupId: containerId === UNGROUPED_ID ? undefined : containerId,
+      groupId: containerId,
       required: false,
     }
-    onFieldsChange(renumberAllContainers([...fields, newField]))
+    onFieldsChange(renumberGroupedFields([...fields, newField]))
+  }
+
+  function addUngroupedField() {
+    const label = 'New Field'
+    const id = uniqueId(slugify(label), fields, null, 'field')
+    const newField: FieldConfig = {
+      id,
+      label,
+      type: 'text',
+      order: fields.filter((f) => !f.groupId).length + 1,
+      globalOrder: 0,
+      required: false,
+    }
+    const newAllFields = [...fields, newField]
+    const newEntry: UnifiedEntry = { kind: 'field', field: newField }
+    applyUnified([...unifiedOrder, newEntry], newAllFields)
   }
 
   function reorderContainer(containerId: string, reordered: FieldConfig[]) {
     const otherFields = fields.filter((field) => (field.groupId ?? UNGROUPED_ID) !== containerId)
-    onFieldsChange(renumberAllContainers([...otherFields, ...reordered]))
-  }
-
-  function applyUnified(entries: UnifiedEntry[]) {
-    const next = renumberUnified(entries)
-    onGroupsChange(next.groups)
-    onUngroupedOrderChange(next.ungroupedOrder)
+    onFieldsChange(renumberGroupedFields([...otherFields, ...reordered]))
   }
 
   function addGroup() {
     const label = 'New section'
     const id = uniqueId(slugify(label), groups, null, 'section')
     const newEntry: UnifiedEntry = { kind: 'group', group: { id, label, order: 0 } }
-    const ungroupedIndex = unifiedOrder.findIndex((entry) => entry.kind === 'ungrouped')
-    const insertAt = ungroupedIndex === -1 ? unifiedOrder.length : ungroupedIndex
-    applyUnified([...unifiedOrder.slice(0, insertAt), newEntry, ...unifiedOrder.slice(insertAt)])
+    applyUnified([...unifiedOrder, newEntry])
   }
 
   function updateGroupLabel(id: string, label: string) {
@@ -173,8 +201,19 @@ export function FieldEditor({
   }
 
   function deleteGroup(id: string) {
-    applyUnified(unifiedOrder.filter((entry) => entry.kind !== 'group' || entry.group.id !== id))
-    onFieldsChange(fields.map((field) => (field.groupId === id ? { ...field, groupId: undefined } : field)))
+    const groupIndex = unifiedOrder.findIndex((e) => e.kind === 'group' && e.group.id === id)
+    const releasedFields = fields.filter((f) => f.groupId === id)
+    const releasedEntries: UnifiedEntry[] = releasedFields.map((f) => ({
+      kind: 'field',
+      field: { ...f, groupId: undefined },
+    }))
+    const newUnified = [
+      ...unifiedOrder.slice(0, groupIndex),
+      ...releasedEntries,
+      ...unifiedOrder.slice(groupIndex + 1),
+    ]
+    const updatedFields = fields.map((f) => (f.groupId === id ? { ...f, groupId: undefined } : f))
+    applyUnified(newUnified, updatedFields)
   }
 
   return (
@@ -200,40 +239,18 @@ export function FieldEditor({
               onAddField={addFieldToContainer}
             />
           ) : (
-            <div key={UNGROUPED_ID} className="space-y-3">
-              <div className="flex items-center justify-between gap-2">
-                {unifiedOrder.length > 1 ? (
-                  <span className="text-sm font-medium text-stone-500">Ungrouped</span>
-                ) : (
-                  <span />
-                )}
-                {unifiedOrder.length > 1 && (
-                  <div className="flex items-center gap-1">
-                    <IconButton
-                      icon={ChevronUp}
-                      label="Move ungrouped up"
-                      onClick={() => moveEntry(index, -1)}
-                      disabled={disabled || index === 0}
-                    />
-                    <IconButton
-                      icon={ChevronDown}
-                      label="Move ungrouped down"
-                      onClick={() => moveEntry(index, 1)}
-                      disabled={disabled || index === unifiedOrder.length - 1}
-                    />
-                  </div>
-                )}
-              </div>
-              <SortableFieldList
-                containerId={UNGROUPED_ID}
-                fields={containers.get(UNGROUPED_ID) ?? []}
-                disabled={disabled}
-                onFieldLabelChange={updateLabel}
-                onFieldChange={updateField}
-                onFieldRemove={removeField}
-                onReorder={reorderContainer}
-              />
-            </div>
+            <UngroupedFieldEntry
+              key={entry.field.id}
+              field={entry.field}
+              disabled={disabled}
+              isFirst={index === 0}
+              isLast={index === unifiedOrder.length - 1}
+              onMoveUp={() => moveEntry(index, -1)}
+              onMoveDown={() => moveEntry(index, 1)}
+              onLabelChange={(label) => updateLabel(entry.field.id, label)}
+              onChange={(patch) => updateField(entry.field.id, patch)}
+              onRemove={() => removeField(entry.field.id)}
+            />
           ),
         )}
       </div>
@@ -241,7 +258,7 @@ export function FieldEditor({
       <div className="mt-4 flex justify-end gap-3">
         <button
           type="button"
-          onClick={() => addFieldToContainer(UNGROUPED_ID)}
+          onClick={addUngroupedField}
           disabled={disabled}
           className="inline-flex items-center gap-2 rounded-full bg-accent-600 px-4 py-2 text-sm font-medium text-white shadow-md transition-colors hover:bg-accent-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -262,7 +279,7 @@ export function FieldEditor({
       <ConfirmDialog
         open={groupToDelete !== null}
         title={`Delete "${groupToDelete?.label}"?`}
-        description="Fields in this section will move to Ungrouped."
+        description="Fields in this section will become individual ungrouped fields."
         confirmLabel="Delete"
         onConfirm={() => {
           if (groupToDelete) deleteGroup(groupToDelete.id)
@@ -343,6 +360,45 @@ function FieldGroupSection({
   )
 }
 
+// Standalone ungrouped field — no DnD, uses up/down buttons for global reordering.
+interface UngroupedFieldEntryProps {
+  field: FieldConfig
+  disabled?: boolean
+  isFirst: boolean
+  isLast: boolean
+  onMoveUp: () => void
+  onMoveDown: () => void
+  onLabelChange: (label: string) => void
+  onChange: (patch: Partial<FieldConfig>) => void
+  onRemove: () => void
+}
+
+function UngroupedFieldEntry({
+  field,
+  disabled,
+  isFirst,
+  isLast,
+  onMoveUp,
+  onMoveDown,
+  onLabelChange,
+  onChange,
+  onRemove,
+}: UngroupedFieldEntryProps) {
+  return (
+    <Card className="group focus-within:border-l-4 focus-within:border-l-accent-600 focus-within:ring-2 focus-within:ring-accent-200">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="font-mono text-xs text-stone-400">id: {field.id}</span>
+        <div className="flex items-center gap-1">
+          <IconButton icon={ChevronUp} label="Move field up" onClick={onMoveUp} disabled={disabled || isFirst} />
+          <IconButton icon={ChevronDown} label="Move field down" onClick={onMoveDown} disabled={disabled || isLast} />
+          <IconButton icon={X} label="Remove field" variant="danger" onClick={onRemove} disabled={disabled} />
+        </div>
+      </div>
+      <FieldBody field={field} disabled={disabled} onLabelChange={onLabelChange} onChange={onChange} />
+    </Card>
+  )
+}
+
 interface SortableFieldListProps {
   containerId: string
   fields: FieldConfig[]
@@ -351,7 +407,7 @@ interface SortableFieldListProps {
   onFieldChange: (id: string, patch: Partial<FieldConfig>) => void
   onFieldRemove: (id: string) => void
   onReorder: (containerId: string, reordered: FieldConfig[]) => void
-  onAddField?: (containerId: string) => void
+  onAddField: (containerId: string) => void
 }
 
 function SortableFieldList({
@@ -397,19 +453,17 @@ function SortableFieldList({
         </SortableContext>
       </DndContext>
 
-      {onAddField && (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => onAddField(containerId)}
-            className="inline-flex items-center gap-1.5 rounded-full bg-accent-600 px-3.5 py-1.5 text-sm font-medium text-white shadow-md transition-colors hover:bg-accent-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            Add field
-          </button>
-        </div>
-      )}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => onAddField(containerId)}
+          className="inline-flex items-center gap-1.5 rounded-full bg-accent-600 px-3.5 py-1.5 text-sm font-medium text-white shadow-md transition-colors hover:bg-accent-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add field
+        </button>
+      </div>
     </div>
   )
 }
@@ -459,7 +513,25 @@ function FieldRow({ field, disabled, onLabelChange, onChange, onRemove }: FieldR
           <IconButton icon={X} label="Remove field" variant="danger" onClick={onRemove} disabled={disabled} />
         </div>
       </div>
+      <FieldBody field={field} disabled={disabled} onLabelChange={onLabelChange} onChange={onChange} />
+    </Card>
+  )
+}
 
+// Shared field editing controls used by both FieldRow (inside sections) and UngroupedFieldEntry.
+function FieldBody({
+  field,
+  disabled,
+  onLabelChange,
+  onChange,
+}: {
+  field: FieldConfig
+  disabled?: boolean
+  onLabelChange: (label: string) => void
+  onChange: (patch: Partial<FieldConfig>) => void
+}) {
+  return (
+    <>
       <div className="grid grid-cols-2 gap-3">
         <TextInput
           label="Label"
@@ -563,7 +635,7 @@ function FieldRow({ field, disabled, onLabelChange, onChange, onRemove }: FieldR
           </Button>
         </div>
       )}
-    </Card>
+    </>
   )
 }
 

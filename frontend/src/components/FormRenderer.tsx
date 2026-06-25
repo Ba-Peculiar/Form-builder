@@ -8,7 +8,6 @@ export type RendererLayout = 'standard' | 'compact'
 interface FormRendererProps {
   fields: FieldConfig[]
   groups?: FieldGroup[]
-  ungroupedOrder?: number
   layout: RendererLayout
   onSubmit?: (data: Record<string, unknown>) => void
   submitLabel?: string
@@ -18,12 +17,13 @@ interface FormRendererProps {
 }
 
 const WIDE_FIELD_TYPES = new Set(['textarea', 'checkbox'])
+const MAX_ORDER = 1_000_000
 
 type SectionItem =
   | { kind: 'group'; group: FieldGroup; fields: FieldConfig[] }
-  | { kind: 'ungrouped'; fields: FieldConfig[] }
+  | { kind: 'field'; field: FieldConfig }
 
-function groupFields(fields: FieldConfig[], groups: FieldGroup[] = [], ungroupedOrder?: number) {
+function groupFields(fields: FieldConfig[], groups: FieldGroup[] = []) {
   const sortedGroups = [...groups].sort((a, b) => a.order - b.order)
   const byId = new Map(sortedGroups.map((group) => [group.id, group]))
   const buckets = new Map<string, FieldConfig[]>(sortedGroups.map((group) => [group.id, []]))
@@ -37,16 +37,20 @@ function groupFields(fields: FieldConfig[], groups: FieldGroup[] = [], ungrouped
     }
   }
   for (const bucket of buckets.values()) bucket.sort((a, b) => a.order - b.order)
-  ungrouped.sort((a, b) => a.order - b.order)
+  ungrouped.sort((a, b) => {
+    const ka = a.globalOrder ?? MAX_ORDER + a.order
+    const kb = b.globalOrder ?? MAX_ORDER + b.order
+    return ka - kb
+  })
 
   const sections = sortedGroups.map((group) => ({ group, fields: buckets.get(group.id)! }))
 
   const items: SectionItem[] = [
     ...sections.map((section) => ({ kind: 'group' as const, group: section.group, fields: section.fields })),
-    { kind: 'ungrouped' as const, fields: ungrouped },
+    ...ungrouped.map((field) => ({ kind: 'field' as const, field })),
   ].sort((a, b) => {
-    const keyA = a.kind === 'group' ? a.group.order : ungroupedOrder ?? Infinity
-    const keyB = b.kind === 'group' ? b.group.order : ungroupedOrder ?? Infinity
+    const keyA = a.kind === 'group' ? a.group.order : a.field.globalOrder ?? MAX_ORDER + a.field.order
+    const keyB = b.kind === 'group' ? b.group.order : b.field.globalOrder ?? MAX_ORDER + b.field.order
     return keyA - keyB
   })
 
@@ -64,7 +68,6 @@ function SectionHeading({ label }: { label: string }) {
 export function FormRenderer({
   fields,
   groups,
-  ungroupedOrder,
   layout,
   onSubmit,
   submitLabel = 'Submit',
@@ -73,7 +76,7 @@ export function FormRenderer({
   readOnly,
 }: FormRendererProps) {
   const { register, handleSubmit } = useForm<Record<string, unknown>>({ defaultValues })
-  const { sections, ungrouped, items } = groupFields(fields, groups, ungroupedOrder)
+  const { sections, ungrouped, items } = groupFields(fields, groups)
   const submit = handleSubmit(onSubmit ?? (() => {}))
 
   if (layout === 'compact') {
@@ -114,15 +117,9 @@ export function FormRenderer({
               </div>
             </div>
           ) : (
-            item.fields.length > 0 && (
-              <div key="ungrouped" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {item.fields.map((field) => (
-                  <div key={field.id} className={WIDE_FIELD_TYPES.has(field.type) ? 'sm:col-span-2' : ''}>
-                    <FieldRenderer field={field} register={register} error={fieldErrors?.[field.id]} compact disabled={readOnly} />
-                  </div>
-                ))}
-              </div>
-            )
+            <div key={item.field.id}>
+              <FieldRenderer field={item.field} register={register} error={fieldErrors?.[item.field.id]} compact disabled={readOnly} />
+            </div>
           ),
         )}
 
@@ -170,15 +167,9 @@ export function FormRenderer({
             ))}
           </div>
         ) : (
-          item.fields.length > 0 && (
-            <div key="ungrouped" className="space-y-4">
-              {item.fields.map((field) => (
-                <Card key={field.id} padding="sm">
-                  <FieldRenderer field={field} register={register} error={fieldErrors?.[field.id]} disabled={readOnly} />
-                </Card>
-              ))}
-            </div>
-          )
+          <Card key={item.field.id} padding="sm">
+            <FieldRenderer field={item.field} register={register} error={fieldErrors?.[item.field.id]} disabled={readOnly} />
+          </Card>
         ),
       )}
 
