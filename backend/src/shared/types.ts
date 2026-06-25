@@ -7,11 +7,18 @@ export type FieldType =
   | 'select'
   | 'checkbox'
 
+export interface FieldGroup {
+  id: string
+  label: string
+  order: number
+}
+
 export interface FieldConfig {
   id: string
   label: string
   type: FieldType
   order: number
+  groupId?: string
   required?: boolean
   minLength?: number
   maxLength?: number
@@ -23,4 +30,5 @@ export interface FieldConfig {
 export interface FormSchema {
   title: string
   fields: FieldConfig[]
+  groups?: FieldGroup[]
 }

@@ -4,7 +4,7 @@ import { Navigate, useParams } from 'react-router-dom'
 import { FieldEditor } from '../components/FieldEditor'
 import { Alert, Button, Card, LoadingState, TextInput, Textarea, useToast } from '../components/ui'
 import { useForm, usePublishForm, useUpdateForm } from '../features/forms/queries'
-import type { FieldConfig, UpdateFormInput } from '../types/form'
+import type { FieldConfig, FieldGroup, UpdateFormInput } from '../types/form'
 
 interface BuilderFormValues {
   title: string
@@ -21,6 +21,7 @@ export function FormBuilderPage() {
   const { showToast } = useToast()
 
   const [fields, setFields] = useState<FieldConfig[]>([])
+  const [groups, setGroups] = useState<FieldGroup[]>([])
   const initializedFor = useRef<string | null>(null)
 
   const {
@@ -32,6 +33,7 @@ export function FormBuilderPage() {
   useEffect(() => {
     if (form && initializedFor.current !== form.id) {
       setFields(form.schema.fields)
+      setGroups(form.schema.groups ?? [])
       initializedFor.current = form.id
     }
   }, [form])
@@ -58,7 +60,7 @@ export function FormBuilderPage() {
     const input: UpdateFormInput = {
       title: values.title,
       description: values.description || undefined,
-      schema: { fields },
+      schema: { fields, groups },
     }
     updateForm.mutate(input, {
       onSuccess: () => showToast('success', 'Form saved'),
@@ -108,7 +110,7 @@ export function FormBuilderPage() {
           </div>
         </Card>
 
-        <FieldEditor fields={fields} onChange={setFields} />
+        <FieldEditor fields={fields} groups={groups} onFieldsChange={setFields} onGroupsChange={setGroups} />
       </form>
     </div>
   )

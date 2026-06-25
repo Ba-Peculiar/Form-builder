@@ -1,5 +1,5 @@
 import { ValidationError } from '../../shared/errors.js'
-import type { FieldConfig, FieldType } from '../../shared/types.js'
+import type { FieldConfig, FieldGroup, FieldType } from '../../shared/types.js'
 
 const ALLOWED_FIELD_TYPES: FieldType[] = [
   'text',
@@ -27,6 +27,7 @@ export interface UpdateFormInput {
   title: string
   description?: string
   fields?: FieldConfig[]
+  groups?: FieldGroup[]
 }
 
 export function validateCreateForm(body: unknown): CreateFormInput {
@@ -64,10 +65,29 @@ export function validateUpdateForm(body: unknown): UpdateFormInput {
   }
 
   let fields: FieldConfig[] | undefined
+  let groups: FieldGroup[] | undefined
 
   if (data.schema !== undefined) {
     const schema = data.schema as Record<string, unknown>
     fields = validateFields(schema.fields, errors)
+    if (schema.groups !== undefined) {
+      groups = validateGroups(schema.groups, errors)
+    }
+  }
+
+  // This only checks consistency within this single request body, not against
+  // a merged-with-existing-version final state - acceptable because the
+  // frontend always sends fields and groups together on every save.
+  if (fields) {
+    const groupIds = new Set((groups ?? []).map((g) => g.id))
+    fields.forEach((field, index) => {
+      if (field.groupId !== undefined && !groupIds.has(field.groupId)) {
+        errors.push({
+          field: `schema.fields[${index}].groupId`,
+          message: `Unknown group id "${field.groupId}"`,
+        })
+      }
+    })
   }
 
   if (errors.length > 0) {
@@ -78,6 +98,7 @@ export function validateUpdateForm(body: unknown): UpdateFormInput {
     title: (data.title as string).trim(),
     description: data.description as string | undefined,
     fields,
+    groups,
   }
 }
 
@@ -126,6 +147,10 @@ function validateFields(rawFields: unknown, errors: FieldErrorDetail[]): FieldCo
       errors.push({ field: `${prefix}.required`, message: 'required must be a boolean' })
     }
 
+    if (field.groupId !== undefined && typeof field.groupId !== 'string') {
+      errors.push({ field: `${prefix}.groupId`, message: 'groupId must be a string' })
+    }
+
     for (const key of ['minLength', 'maxLength', 'min', 'max'] as const) {
       if (field[key] !== undefined && typeof field[key] !== 'number') {
         errors.push({ field: `${prefix}.${key}`, message: `${key} must be a number` })
@@ -150,4 +175,43 @@ function validateFields(rawFields: unknown, errors: FieldErrorDetail[]): FieldCo
   })
 
   return fields
+}
+
+function validateGroups(rawGroups: unknown, errors: FieldErrorDetail[]): FieldGroup[] {
+  if (!Array.isArray(rawGroups)) {
+    errors.push({ field: 'schema.groups', message: 'Groups must be an array' })
+    return []
+  }
+
+  const seenIds = new Set<string>()
+  const groups: FieldGroup[] = []
+
+  rawGroups.forEach((raw, index) => {
+    const prefix = `schema.groups[${index}]`
+    const group = (raw ?? {}) as Record<string, unknown>
+
+    const id = group.id
+    if (typeof id !== 'string' || !FIELD_ID_PATTERN.test(id)) {
+      errors.push({
+        field: `${prefix}.id`,
+        message: 'Group id is required and must be alphanumeric (with - or _)',
+      })
+    } else if (seenIds.has(id)) {
+      errors.push({ field: `${prefix}.id`, message: `Duplicate group id "${id}"` })
+    } else {
+      seenIds.add(id)
+    }
+
+    if (typeof group.label !== 'string' || group.label.trim().length === 0) {
+      errors.push({ field: `${prefix}.label`, message: 'Group label is required' })
+    }
+
+    if (typeof group.order !== 'number' || !Number.isFinite(group.order)) {
+      errors.push({ field: `${prefix}.order`, message: 'Group order must be a number' })
+    }
+
+    groups.push(group as unknown as FieldGroup)
+  })
+
+  return groups
 }

@@ -23,6 +23,6 @@ export async function getPublishedForm(formId: string) {
     version: version.versionNumber,
     title: form.title,
     description: form.description,
-    schema: { fields: schema.fields },
+    schema: { fields: schema.fields, groups: schema.groups },
   }
 }

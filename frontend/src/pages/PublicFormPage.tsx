@@ -69,6 +69,7 @@ export function PublicFormPage() {
           <Card>
             <FormRenderer
               fields={form.schema.fields}
+              groups={form.schema.groups}
               layout={layout}
               fieldErrors={fieldErrors}
               onSubmit={handleSubmit}

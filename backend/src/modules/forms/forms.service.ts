@@ -90,6 +90,7 @@ export async function updateForm(formId: string, input: UpdateFormInput) {
         schema: toJson({
           title: input.title,
           fields: input.fields ?? fromJson(latestVersion.schema).fields,
+          groups: input.groups ?? fromJson(latestVersion.schema).groups,
         }),
       },
     }),
