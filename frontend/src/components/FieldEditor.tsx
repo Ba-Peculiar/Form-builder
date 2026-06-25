@@ -1,14 +1,6 @@
-import { useState, type ReactNode } from 'react'
-import {
-  closestCenter,
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  useDroppable,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core'
-import type { DragEndEvent, DragOverEvent } from '@dnd-kit/core'
+import { useState } from 'react'
+import { closestCenter, DndContext, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
 import {
   arrayMove,
   SortableContext,
@@ -17,7 +9,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ChevronDown, ChevronUp, GripVertical, Plus, X } from 'lucide-react'
+import { ChevronDown, ChevronUp, FolderPlus, GripVertical, Plus, X } from 'lucide-react'
 import { Button, Card, ConfirmDialog, IconButton, Select, Switch, TextInput } from './ui'
 import type { FieldConfig, FieldGroup, FieldType } from '../types/form'
 
@@ -64,14 +56,6 @@ function buildContainers(fields: FieldConfig[], groups: FieldGroup[]) {
   return byGroup
 }
 
-function findContainerOf(id: string, containers: Map<string, FieldConfig[]>): string | undefined {
-  if (containers.has(id)) return id
-  for (const [containerId, items] of containers) {
-    if (items.some((field) => field.id === id)) return containerId
-  }
-  return undefined
-}
-
 function renumberAllContainers(fields: FieldConfig[]): FieldConfig[] {
   const counters = new Map<string, number>()
   return fields.map((field) => {
@@ -93,11 +77,6 @@ interface FieldEditorProps {
 export function FieldEditor({ fields, groups, onFieldsChange, onGroupsChange, disabled }: FieldEditorProps) {
   const [groupToDelete, setGroupToDelete] = useState<FieldGroup | null>(null)
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  )
-
   const containers = buildContainers(fields, groups)
   const sortedGroups = [...groups].sort((a, b) => a.order - b.order)
 
@@ -110,7 +89,11 @@ export function FieldEditor({ fields, groups, onFieldsChange, onGroupsChange, di
     updateField(id, { label, id: newId })
   }
 
-  function addField() {
+  function removeField(id: string) {
+    onFieldsChange(renumberAllContainers(fields.filter((field) => field.id !== id)))
+  }
+
+  function addFieldToContainer(containerId: string) {
     const label = 'New Field'
     const id = uniqueId(slugify(label), fields, null, 'field')
     const newField: FieldConfig = {
@@ -118,13 +101,15 @@ export function FieldEditor({ fields, groups, onFieldsChange, onGroupsChange, di
       label,
       type: 'text',
       order: fields.length + 1,
+      groupId: containerId === UNGROUPED_ID ? undefined : containerId,
       required: false,
     }
     onFieldsChange(renumberAllContainers([...fields, newField]))
   }
 
-  function removeField(id: string) {
-    onFieldsChange(renumberAllContainers(fields.filter((field) => field.id !== id)))
+  function reorderContainer(containerId: string, reordered: FieldConfig[]) {
+    const otherFields = fields.filter((field) => (field.groupId ?? UNGROUPED_ID) !== containerId)
+    onFieldsChange(renumberAllContainers([...otherFields, ...reordered]))
   }
 
   function addGroup() {
@@ -149,58 +134,14 @@ export function FieldEditor({ fields, groups, onFieldsChange, onGroupsChange, di
     onFieldsChange(fields.map((field) => (field.groupId === id ? { ...field, groupId: undefined } : field)))
   }
 
-  function handleDragOver(event: DragOverEvent) {
-    const { active, over } = event
-    if (!over) return
-
-    const activeId = active.id as string
-    const overId = over.id as string
-    const activeContainer = findContainerOf(activeId, containers)
-    const overContainer = findContainerOf(overId, containers)
-    if (!activeContainer || !overContainer || activeContainer === overContainer) return
-
-    onFieldsChange(
-      fields.map((field) =>
-        field.id === activeId
-          ? { ...field, groupId: overContainer === UNGROUPED_ID ? undefined : overContainer }
-          : field,
-      ),
-    )
-  }
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event
-    if (!over) return
-
-    const activeId = active.id as string
-    const overId = over.id as string
-
-    // onDragOver may already have moved the field's groupId, so re-derive
-    // containers fresh from the latest fields/groups before finalizing.
-    const liveContainers = buildContainers(fields, groups)
-    const overContainer = findContainerOf(overId, liveContainers)
-    if (!overContainer) return
-
-    const items = liveContainers.get(overContainer)!
-    const oldIndex = items.findIndex((field) => field.id === activeId)
-    if (oldIndex === -1) return
-    const newIndex = overId === overContainer ? items.length - 1 : items.findIndex((field) => field.id === overId)
-
-    const reordered = newIndex === -1 || newIndex === oldIndex ? items : arrayMove(items, oldIndex, newIndex)
-    const otherFields = fields.filter((field) => findContainerOf(field.id, liveContainers) !== overContainer)
-
-    onFieldsChange(renumberAllContainers([...otherFields, ...reordered]))
-  }
-
   return (
-    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
+    <div>
       <div className="space-y-6">
         {sortedGroups.map((group, index) => (
           <FieldGroupSection
             key={group.id}
             group={group}
             fields={containers.get(group.id) ?? []}
-            groups={groups}
             disabled={disabled}
             isFirst={index === 0}
             isLast={index === sortedGroups.length - 1}
@@ -211,6 +152,8 @@ export function FieldEditor({ fields, groups, onFieldsChange, onGroupsChange, di
             onFieldLabelChange={updateLabel}
             onFieldChange={updateField}
             onFieldRemove={removeField}
+            onReorder={reorderContainer}
+            onAddField={addFieldToContainer}
           />
         ))}
 
@@ -218,53 +161,29 @@ export function FieldEditor({ fields, groups, onFieldsChange, onGroupsChange, di
           {sortedGroups.length > 0 && (
             <span className="block text-sm font-medium text-stone-500">Ungrouped</span>
           )}
-          <GroupDropZone id={UNGROUPED_ID}>
-            <SortableContext
-              items={(containers.get(UNGROUPED_ID) ?? []).map((field) => field.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="space-y-3">
-                {(containers.get(UNGROUPED_ID) ?? []).map((field) => (
-                  <FieldRow
-                    key={field.id}
-                    field={field}
-                    groups={groups}
-                    disabled={disabled}
-                    onLabelChange={(label) => updateLabel(field.id, label)}
-                    onChange={(patch) => updateField(field.id, patch)}
-                    onRemove={() => removeField(field.id)}
-                  />
-                ))}
-                {(containers.get(UNGROUPED_ID) ?? []).length === 0 && sortedGroups.length > 0 && (
-                  <EmptyDropPlaceholder />
-                )}
-              </div>
-            </SortableContext>
-          </GroupDropZone>
+          <SortableFieldList
+            containerId={UNGROUPED_ID}
+            fields={containers.get(UNGROUPED_ID) ?? []}
+            disabled={disabled}
+            onFieldLabelChange={updateLabel}
+            onFieldChange={updateField}
+            onFieldRemove={removeField}
+            onReorder={reorderContainer}
+            onAddField={addFieldToContainer}
+          />
         </div>
       </div>
 
-      <div className="mt-3 flex gap-2">
-        <Button
+      <div className="mt-4 flex justify-end">
+        <button
           type="button"
-          variant="secondary"
-          onClick={addField}
-          disabled={disabled}
-          className="flex-1 border-dashed border-accent-300 text-accent-700 hover:border-accent-400 hover:bg-accent-50"
-        >
-          <Plus className="h-4 w-4" />
-          Add field
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
           onClick={addGroup}
           disabled={disabled}
-          className="flex-1 border-dashed border-accent-300 text-accent-700 hover:border-accent-400 hover:bg-accent-50"
+          className="inline-flex items-center gap-2 rounded-full bg-accent-600 px-4 py-2 text-sm font-medium text-white shadow-md transition-colors hover:bg-accent-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <Plus className="h-4 w-4" />
+          <FolderPlus className="h-4 w-4" />
           Add section
-        </Button>
+        </button>
       </div>
 
       <ConfirmDialog
@@ -278,31 +197,13 @@ export function FieldEditor({ fields, groups, onFieldsChange, onGroupsChange, di
         }}
         onCancel={() => setGroupToDelete(null)}
       />
-    </DndContext>
-  )
-}
-
-function GroupDropZone({ id, children }: { id: string; children: ReactNode }) {
-  const { setNodeRef, isOver } = useDroppable({ id })
-  return (
-    <div ref={setNodeRef} className={`rounded-lg transition-colors ${isOver ? 'bg-accent-50 ring-2 ring-accent-300' : ''}`}>
-      {children}
     </div>
-  )
-}
-
-function EmptyDropPlaceholder() {
-  return (
-    <p className="rounded-lg border border-dashed border-stone-300 px-3 py-6 text-center text-sm text-stone-400">
-      Drop fields here
-    </p>
   )
 }
 
 interface FieldGroupSectionProps {
   group: FieldGroup
   fields: FieldConfig[]
-  groups: FieldGroup[]
   disabled?: boolean
   isFirst: boolean
   isLast: boolean
@@ -313,12 +214,13 @@ interface FieldGroupSectionProps {
   onFieldLabelChange: (id: string, label: string) => void
   onFieldChange: (id: string, patch: Partial<FieldConfig>) => void
   onFieldRemove: (id: string) => void
+  onReorder: (containerId: string, reordered: FieldConfig[]) => void
+  onAddField: (containerId: string) => void
 }
 
 function FieldGroupSection({
   group,
   fields,
-  groups,
   disabled,
   isFirst,
   isLast,
@@ -329,6 +231,8 @@ function FieldGroupSection({
   onFieldLabelChange,
   onFieldChange,
   onFieldRemove,
+  onReorder,
+  onAddField,
 }: FieldGroupSectionProps) {
   return (
     <div className="space-y-3 rounded-xl border border-dashed border-stone-300 p-4">
@@ -352,38 +256,98 @@ function FieldGroupSection({
         </div>
       </div>
 
-      <GroupDropZone id={group.id}>
+      <SortableFieldList
+        containerId={group.id}
+        fields={fields}
+        disabled={disabled}
+        onFieldLabelChange={onFieldLabelChange}
+        onFieldChange={onFieldChange}
+        onFieldRemove={onFieldRemove}
+        onReorder={onReorder}
+        onAddField={onAddField}
+      />
+    </div>
+  )
+}
+
+interface SortableFieldListProps {
+  containerId: string
+  fields: FieldConfig[]
+  disabled?: boolean
+  onFieldLabelChange: (id: string, label: string) => void
+  onFieldChange: (id: string, patch: Partial<FieldConfig>) => void
+  onFieldRemove: (id: string) => void
+  onReorder: (containerId: string, reordered: FieldConfig[]) => void
+  onAddField: (containerId: string) => void
+}
+
+function SortableFieldList({
+  containerId,
+  fields,
+  disabled,
+  onFieldLabelChange,
+  onFieldChange,
+  onFieldRemove,
+  onReorder,
+  onAddField,
+}: SortableFieldListProps) {
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = fields.findIndex((field) => field.id === active.id)
+    const newIndex = fields.findIndex((field) => field.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+    onReorder(containerId, arrayMove(fields, oldIndex, newIndex))
+  }
+
+  return (
+    <div className="space-y-3">
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={fields.map((field) => field.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-3">
-            {fields.map((field) => (
+            {fields.map((field, index) => (
               <FieldRow
-                key={field.id}
+                key={index}
                 field={field}
-                groups={groups}
                 disabled={disabled}
                 onLabelChange={(label) => onFieldLabelChange(field.id, label)}
                 onChange={(patch) => onFieldChange(field.id, patch)}
                 onRemove={() => onFieldRemove(field.id)}
               />
             ))}
-            {fields.length === 0 && <EmptyDropPlaceholder />}
           </div>
         </SortableContext>
-      </GroupDropZone>
+      </DndContext>
+
+      <div className="flex justify-end">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => onAddField(containerId)}
+          className="inline-flex items-center gap-1.5 rounded-full bg-accent-600 px-3.5 py-1.5 text-sm font-medium text-white shadow-md transition-colors hover:bg-accent-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add field
+        </button>
+      </div>
     </div>
   )
 }
 
 interface FieldRowProps {
   field: FieldConfig
-  groups: FieldGroup[]
   disabled?: boolean
   onLabelChange: (label: string) => void
   onChange: (patch: Partial<FieldConfig>) => void
   onRemove: () => void
 }
 
-function FieldRow({ field, groups, disabled, onLabelChange, onChange, onRemove }: FieldRowProps) {
+function FieldRow({ field, disabled, onLabelChange, onChange, onRemove }: FieldRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: field.id,
     disabled,
@@ -442,26 +406,6 @@ function FieldRow({ field, groups, disabled, onLabelChange, onChange, onRemove }
           ))}
         </Select>
       </div>
-
-      {groups.length > 0 && (
-        <div className="mt-3">
-          <Select
-            label="Section"
-            value={field.groupId ?? UNGROUPED_ID}
-            disabled={disabled}
-            onChange={(e) =>
-              onChange({ groupId: e.target.value === UNGROUPED_ID ? undefined : e.target.value })
-            }
-          >
-            <option value={UNGROUPED_ID}>Ungrouped</option>
-            {groups.map((group) => (
-              <option key={group.id} value={group.id}>
-                {group.label}
-              </option>
-            ))}
-          </Select>
-        </div>
-      )}
 
       <div className="mt-3">
         <Switch

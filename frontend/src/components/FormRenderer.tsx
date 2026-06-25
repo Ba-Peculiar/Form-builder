@@ -38,6 +38,14 @@ function groupFields(fields: FieldConfig[], groups: FieldGroup[] = []) {
   }
 }
 
+function SectionHeading({ label }: { label: string }) {
+  return (
+    <h2 className="border-l-4 border-accent-600 pl-3 text-base font-semibold uppercase tracking-wide text-stone-900">
+      {label}
+    </h2>
+  )
+}
+
 export function FormRenderer({
   fields,
   groups,
@@ -72,20 +80,27 @@ export function FormRenderer({
 
     return (
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-        {sections.map(({ group, fields: groupFieldsList }) => (
-          <div key={group.id} className="space-y-4">
-            <h2 className="text-lg font-semibold text-stone-900">{group.label}</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {groupFieldsList.map((field) => (
-                <div key={field.id} className={WIDE_FIELD_TYPES.has(field.type) ? 'sm:col-span-2' : ''}>
-                  <FieldRenderer field={field} register={register} error={fieldErrors?.[field.id]} compact />
-                </div>
-              ))}
+        {sections.map(({ group, fields: groupFieldsList }, index) => (
+          <div key={group.id} className={`space-y-3 ${index > 0 ? 'border-t border-stone-200 pt-6' : ''}`}>
+            <SectionHeading label={group.label} />
+            <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {groupFieldsList.map((field) => (
+                  <div key={field.id} className={WIDE_FIELD_TYPES.has(field.type) ? 'sm:col-span-2' : ''}>
+                    <FieldRenderer field={field} register={register} error={fieldErrors?.[field.id]} compact />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         ))}
+
         {ungrouped.length > 0 && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div
+            className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${
+              sections.length > 0 ? 'border-t border-stone-200 pt-6' : ''
+            }`}
+          >
             {ungrouped.map((field) => (
               <div key={field.id} className={WIDE_FIELD_TYPES.has(field.type) ? 'sm:col-span-2' : ''}>
                 <FieldRenderer field={field} register={register} error={fieldErrors?.[field.id]} compact />
@@ -93,6 +108,7 @@ export function FormRenderer({
             ))}
           </div>
         )}
+
         <div className="flex justify-center">
           <button
             type="submit"
@@ -122,9 +138,9 @@ export function FormRenderer({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-      {sections.map(({ group, fields: groupFieldsList }) => (
-        <div key={group.id} className="space-y-4">
-          <h2 className="text-lg font-semibold text-stone-900">{group.label}</h2>
+      {sections.map(({ group, fields: groupFieldsList }, index) => (
+        <div key={group.id} className={`space-y-4 ${index > 0 ? 'border-t border-stone-200 pt-6' : ''}`}>
+          <SectionHeading label={group.label} />
           {groupFieldsList.map((field) => (
             <Card key={field.id} padding="sm">
               <FieldRenderer field={field} register={register} error={fieldErrors?.[field.id]} />
@@ -132,11 +148,17 @@ export function FormRenderer({
           ))}
         </div>
       ))}
-      {ungrouped.map((field) => (
-        <Card key={field.id} padding="sm">
-          <FieldRenderer field={field} register={register} error={fieldErrors?.[field.id]} />
-        </Card>
-      ))}
+
+      {ungrouped.length > 0 && (
+        <div className={`space-y-4 ${sections.length > 0 ? 'border-t border-stone-200 pt-6' : ''}`}>
+          {ungrouped.map((field) => (
+            <Card key={field.id} padding="sm">
+              <FieldRenderer field={field} register={register} error={fieldErrors?.[field.id]} />
+            </Card>
+          ))}
+        </div>
+      )}
+
       <Button type="submit" className="h-fit self-start">
         {submitLabel}
       </Button>
