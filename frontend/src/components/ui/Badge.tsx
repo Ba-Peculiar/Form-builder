@@ -8,7 +8,7 @@ interface BadgeProps {
 const VARIANT_CLASSES: Record<BadgeProps['variant'], string> = {
   draft: 'bg-amber-100 text-amber-700',
   published: 'bg-success-50 text-success-700',
-  neutral: 'bg-slate-100 text-slate-600',
+  neutral: 'bg-stone-100 text-stone-600',
 }
 
 export function Badge({ variant, children }: BadgeProps) {

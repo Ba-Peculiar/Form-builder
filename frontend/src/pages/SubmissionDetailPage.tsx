@@ -41,21 +41,21 @@ export function SubmissionDetailPage() {
       <FormTabs formId={submission.formId} active="responses" />
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-slate-900">Response</h1>
+        <h1 className="text-2xl font-semibold text-stone-900">Response</h1>
         <Badge variant="neutral">v{submission.version}</Badge>
       </div>
-      <p className="mt-1 font-mono text-xs text-slate-400">{submission.id}</p>
-      <p className="mt-1 text-sm text-slate-500">{formatFullDate(submission.submittedAt)}</p>
+      <p className="mt-1 font-mono text-xs text-stone-400">{submission.id}</p>
+      <p className="mt-1 text-sm text-stone-500">{formatFullDate(submission.submittedAt)}</p>
 
       <Card className="mt-6" padding="none">
         {entries.length === 0 ? (
-          <p className="p-4 text-sm text-slate-500">This response has no data.</p>
+          <p className="p-4 text-sm text-stone-500">This response has no data.</p>
         ) : (
-          <dl className="divide-y divide-slate-100">
+          <dl className="divide-y divide-stone-100">
             {entries.map(([key, value]) => (
               <div key={key} className="p-4">
-                <dt className="text-sm font-medium text-slate-500">{humanizeKey(key)}</dt>
-                <dd className="mt-1 text-sm text-slate-900">{formatValue(value)}</dd>
+                <dt className="text-sm font-medium text-stone-500">{humanizeKey(key)}</dt>
+                <dd className="mt-1 text-sm text-stone-900">{formatValue(value)}</dd>
               </div>
             ))}
           </dl>

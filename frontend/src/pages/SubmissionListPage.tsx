@@ -20,14 +20,14 @@ export function SubmissionListPage() {
 
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Responses</h1>
-          {form && <p className="mt-1 text-sm text-slate-500">{form.title}</p>}
+          <h1 className="text-2xl font-semibold text-stone-900">Responses</h1>
+          {form && <p className="mt-1 text-sm text-stone-500">{form.title}</p>}
         </div>
 
         {submissions && submissions.length > 0 && (
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-semibold text-accent-600">{submissions.length}</p>
-            <p className="text-xs text-slate-500">{submissions.length === 1 ? 'response' : 'responses'}</p>
+            <p className="text-xs text-stone-500">{submissions.length === 1 ? 'response' : 'responses'}</p>
           </Card>
         )}
       </div>
@@ -55,15 +55,15 @@ export function SubmissionListPage() {
             <Link key={submission.id} to={`/submissions/${submission.id}`} className="block">
               <Card padding="sm" className="flex items-center justify-between transition-shadow hover:shadow-md">
                 <div className="flex items-center gap-3">
-                  <FileText className="h-4 w-4 text-slate-400" />
+                  <FileText className="h-4 w-4 text-stone-400" />
                   <div>
-                    <p className="font-mono text-sm text-slate-900">{submission.id.slice(0, 8)}…</p>
-                    <p className="text-xs text-slate-500">{formatRelativeTime(submission.submittedAt)}</p>
+                    <p className="font-mono text-sm text-stone-900">{submission.id.slice(0, 8)}…</p>
+                    <p className="text-xs text-stone-500">{formatRelativeTime(submission.submittedAt)}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="neutral">v{submission.version}</Badge>
-                  <ChevronRight className="h-4 w-4 text-slate-400" />
+                  <ChevronRight className="h-4 w-4 text-stone-400" />
                 </div>
               </Card>
             </Link>

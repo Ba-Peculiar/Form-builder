@@ -26,14 +26,14 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {toast && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-900/40 p-4">
           <Card className="flex w-full max-w-sm flex-col items-center gap-3 py-8 text-center">
             {toast.variant === 'success' ? (
               <CheckCircle2 className="h-10 w-10 text-success-600" />
             ) : (
               <XCircle className="h-10 w-10 text-danger-600" />
             )}
-            <p className="text-base font-medium text-slate-900">{toast.message}</p>
+            <p className="text-base font-medium text-stone-900">{toast.message}</p>
           </Card>
         </div>
       )}

@@ -38,10 +38,10 @@ export function PublicFormPage() {
   return (
     <div className="mx-auto max-w-3xl p-6">
       <div className="h-2 rounded-t-xl bg-accent-600" />
-      <div className="flex items-center justify-between rounded-b-xl border border-t-0 border-slate-200 bg-white px-6 py-5">
+      <div className="flex items-center justify-between rounded-b-xl border border-t-0 border-stone-200 bg-white px-6 py-5">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">{form.title}</h1>
-          {form.description && <p className="mt-1 text-slate-600">{form.description}</p>}
+          <h1 className="text-2xl font-semibold text-stone-900">{form.title}</h1>
+          {form.description && <p className="mt-1 text-stone-600">{form.description}</p>}
         </div>
 
         <div className="flex gap-2">

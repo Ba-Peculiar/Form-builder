@@ -105,7 +105,7 @@ export function FormBuilderPage() {
               placeholder="Form description"
               defaultValue={form.description ?? ''}
               rows={1}
-              className="border-none px-0 text-sm text-slate-600"
+              className="border-none px-0 text-sm text-stone-600"
               {...register('description')}
             />
           </div>

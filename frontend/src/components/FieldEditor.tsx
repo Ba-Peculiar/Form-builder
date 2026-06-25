@@ -154,11 +154,11 @@ function FieldRow({ field, disabled, onLabelChange, onChange, onRemove }: FieldR
             {...listeners}
             disabled={disabled}
             aria-label="Drag to reorder"
-            className="cursor-grab touch-none text-slate-400 hover:text-slate-600 active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-30"
+            className="cursor-grab touch-none text-stone-400 hover:text-stone-600 active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-30"
           >
             <GripVertical className="h-4 w-4" />
           </button>
-          <span className="font-mono text-xs text-slate-400">id: {field.id}</span>
+          <span className="font-mono text-xs text-stone-400">id: {field.id}</span>
         </div>
         <div className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
           <IconButton icon={X} label="Remove field" variant="danger" onClick={onRemove} disabled={disabled} />
@@ -232,7 +232,7 @@ function FieldRow({ field, disabled, onLabelChange, onChange, onRemove }: FieldR
 
       {field.type === 'select' && (
         <div className="mt-3 space-y-2">
-          <span className="block text-sm font-medium text-slate-700">Options</span>
+          <span className="block text-sm font-medium text-stone-700">Options</span>
           {(field.options ?? []).map((option, optIndex) => (
             <div key={optIndex} className="flex items-center gap-2">
               <div className="flex-1">

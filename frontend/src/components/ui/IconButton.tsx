@@ -8,7 +8,7 @@ interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_CLASSES: Record<NonNullable<IconButtonProps['variant']>, string> = {
-  default: 'text-slate-500 hover:bg-slate-100 hover:text-slate-900',
+  default: 'text-stone-500 hover:bg-stone-100 hover:text-stone-900',
   danger: 'text-danger-600 hover:bg-danger-50',
 }
 

@@ -48,17 +48,17 @@ export function FormsDashboardPage() {
   return (
     <div className="mx-auto max-w-5xl p-6">
       <section>
-        <h2 className="mb-3 text-sm font-medium text-slate-600">Start a new form</h2>
+        <h2 className="mb-3 text-sm font-medium text-stone-600">Start a new form</h2>
         <button
           type="button"
           onClick={handleCreateBlank}
           disabled={createForm.isPending}
           className="flex w-40 flex-col items-center gap-2 disabled:opacity-50"
         >
-          <span className="flex h-28 w-40 items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+          <span className="flex h-28 w-40 items-center justify-center rounded-lg border border-stone-200 bg-white shadow-sm transition-shadow hover:shadow-md">
             <Plus className="h-9 w-9 text-accent-600" />
           </span>
-          <span className="text-sm text-slate-700">Blank form</span>
+          <span className="text-sm text-stone-700">Blank form</span>
         </button>
         {createForm.isError && (
           <div className="mt-3 max-w-sm">
@@ -68,7 +68,7 @@ export function FormsDashboardPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="mb-3 text-sm font-medium text-slate-600">Your forms</h2>
+        <h2 className="mb-3 text-sm font-medium text-stone-600">Your forms</h2>
 
         {isLoading && <LoadingState label="Loading forms…" />}
         {isError && <Alert variant="error">Failed to load forms.</Alert>}
@@ -122,8 +122,8 @@ function FormCard({ form, onDelete }: { form: FormSummary; onDelete: () => void 
         <FormPreviewThumbnail formId={form.id} />
       </Link>
 
-      <div className="flex items-center justify-between gap-2 border-t border-slate-200 p-3">
-        <Link to={viewHref} className="truncate text-sm font-medium text-slate-900">
+      <div className="flex items-center justify-between gap-2 border-t border-stone-200 p-3">
+        <Link to={viewHref} className="truncate text-sm font-medium text-stone-900">
           {form.title}
         </Link>
         <div className="flex shrink-0 items-center gap-2">
@@ -132,7 +132,7 @@ function FormCard({ form, onDelete }: { form: FormSummary; onDelete: () => void 
         </div>
       </div>
       {form.status === 'PUBLISHED' && (
-        <div className="border-t border-slate-100 px-3 py-2">
+        <div className="border-t border-stone-100 px-3 py-2">
           <Link
             to={`/forms/${form.id}/submissions`}
             className="text-xs font-medium text-accent-600 hover:text-accent-700"

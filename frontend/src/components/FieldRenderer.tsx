@@ -16,7 +16,7 @@ export function FieldRenderer({ field, register, error, compact }: FieldRenderer
   return (
     <div className="flex flex-col">
       {showLabel && (
-        <label htmlFor={field.id} className="mb-1 text-sm font-medium text-slate-700">
+        <label htmlFor={field.id} className="mb-1 text-sm font-medium text-stone-700">
           {field.label}
           {field.required && <span className="text-danger-600"> *</span>}
         </label>
@@ -32,8 +32,8 @@ function inputClass(error: string | undefined, padding: string, compact?: boolea
   const tone = error
     ? 'border-danger-300 focus:border-danger-500 focus:ring-2 focus:ring-danger-200'
     : compact
-      ? 'border-slate-200 focus:border-accent-500 focus:ring-2 focus:ring-accent-200'
-      : 'border-slate-300 focus:border-accent-500 focus:ring-2 focus:ring-accent-200'
+      ? 'border-stone-200 focus:border-accent-500 focus:ring-2 focus:ring-accent-200'
+      : 'border-stone-300 focus:border-accent-500 focus:ring-2 focus:ring-accent-200'
   return `${size} ${padding} ${tone}`
 }
 
@@ -51,7 +51,7 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
           rows={compact ? 4 : 3}
           placeholder={compact ? placeholderLabel(field) : undefined}
           aria-label={compact ? field.label : undefined}
-          className={`w-full resize-none ${compact ? 'bg-white' : 'bg-slate-50'} ${inputClass(error, 'pl-3 pr-3', compact)}`}
+          className={`w-full resize-none ${compact ? 'bg-white' : 'bg-stone-50'} ${inputClass(error, 'pl-3 pr-3', compact)}`}
           {...register(field.id)}
         />
       )
@@ -59,7 +59,7 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
     case 'number':
       return (
         <div className="relative">
-          <Hash className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Hash className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
           <input
             id={field.id}
             type="text"
@@ -77,7 +77,7 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
     case 'email':
       return (
         <div className="relative">
-          <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
           <input
             id={field.id}
             type="email"
@@ -93,7 +93,7 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
     case 'date':
       return (
         <div className="relative">
-          <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
           <input
             id={field.id}
             type="date"
@@ -122,13 +122,13 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
               </option>
             ))}
           </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
         </div>
       )
 
     case 'checkbox':
       return (
-        <label className="flex items-center gap-2 text-sm text-slate-700">
+        <label className="flex items-center gap-2 text-sm text-stone-700">
           <input
             id={field.id}
             type="checkbox"
