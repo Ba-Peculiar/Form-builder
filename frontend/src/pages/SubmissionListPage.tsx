@@ -1,9 +1,10 @@
 import { Link, useParams } from 'react-router-dom'
-import { ChevronRight, FileText, Inbox } from 'lucide-react'
+import { FileCheck, Inbox } from 'lucide-react'
 import { FormTabs } from '../components/FormTabs'
 import { Alert, Badge, Card, EmptyState, LoadingState } from '../components/ui'
 import { useForm, useSubmissions } from '../features/forms/queries'
 import { formatRelativeTime } from '../lib/formatDate'
+import type { SubmissionSummary } from '../types/form'
 
 export function SubmissionListPage() {
   const { formId } = useParams<{ formId: string }>()
@@ -11,7 +12,7 @@ export function SubmissionListPage() {
   const { data: submissions, isLoading, isError } = useSubmissions(formId ?? '')
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
+    <div className="mx-auto max-w-5xl p-6">
       <FormTabs
         formId={formId ?? ''}
         active="responses"
@@ -50,26 +51,31 @@ export function SubmissionListPage() {
       )}
 
       {submissions && submissions.length > 0 && (
-        <div className="mt-6 space-y-2">
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {submissions.map((submission) => (
-            <Link key={submission.id} to={`/submissions/${submission.id}`} className="block">
-              <Card padding="sm" className="flex items-center justify-between transition-shadow hover:shadow-md">
-                <div className="flex items-center gap-3">
-                  <FileText className="h-4 w-4 text-stone-400" />
-                  <div>
-                    <p className="font-mono text-sm text-stone-900">{submission.id.slice(0, 8)}…</p>
-                    <p className="text-xs text-stone-500">{formatRelativeTime(submission.submittedAt)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="neutral">v{submission.version}</Badge>
-                  <ChevronRight className="h-4 w-4 text-stone-400" />
-                </div>
-              </Card>
-            </Link>
+            <SubmissionCard key={submission.id} submission={submission} />
           ))}
         </div>
       )}
     </div>
+  )
+}
+
+function SubmissionCard({ submission }: { submission: SubmissionSummary }) {
+  return (
+    <Link to={`/submissions/${submission.id}`} className="block">
+      <Card padding="none" className="overflow-hidden transition-shadow hover:shadow-md">
+        <div className="flex h-28 items-center justify-center bg-[#f1e3d1]">
+          <FileCheck className="h-10 w-10 text-accent-700/40" />
+        </div>
+        <div className="flex items-center justify-between gap-2 border-t border-stone-200 p-3">
+          <p className="truncate font-mono text-xs text-stone-900">{submission.id.slice(0, 8)}…</p>
+          <Badge variant="neutral">v{submission.version}</Badge>
+        </div>
+        <div className="border-t border-stone-100 px-3 py-2">
+          <p className="text-xs text-stone-500">{formatRelativeTime(submission.submittedAt)}</p>
+        </div>
+      </Card>
+    </Link>
   )
 }

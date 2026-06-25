@@ -1,32 +1,22 @@
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { FormTabs } from '../components/FormTabs'
-import { Alert, Badge, Card, LoadingState } from '../components/ui'
-import { useSubmission } from '../features/forms/queries'
+import { FormRenderer, type RendererLayout } from '../components/FormRenderer'
+import { Alert, Badge, Button, Card, LoadingState } from '../components/ui'
+import { useForm, useSubmission } from '../features/forms/queries'
 import { formatFullDate } from '../lib/formatDate'
-
-function humanizeKey(key: string): string {
-  return key
-    .replace(/[_-]+/g, ' ')
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .trim()
-    .replace(/\b\w/g, (char) => char.toUpperCase())
-}
-
-function formatValue(value: unknown): string {
-  if (typeof value === 'boolean') return value ? 'Yes' : 'No'
-  if (value === null || value === undefined || value === '') return '—'
-  return String(value)
-}
 
 export function SubmissionDetailPage() {
   const { submissionId } = useParams<{ submissionId: string }>()
   const { data: submission, isLoading, isError } = useSubmission(submissionId ?? '')
+  const { data: form, isLoading: isFormLoading } = useForm(submission?.formId ?? '')
+  const [layout, setLayout] = useState<RendererLayout>('standard')
 
-  if (isLoading) {
+  if (isLoading || isFormLoading) {
     return <LoadingState label="Loading response…" />
   }
 
-  if (isError || !submission) {
+  if (isError || !submission || !form) {
     return (
       <div className="mx-auto max-w-3xl p-6">
         <Alert variant="error">Response not found.</Alert>
@@ -34,33 +24,59 @@ export function SubmissionDetailPage() {
     )
   }
 
-  const entries = Object.entries(submission.data)
-
   return (
     <div className="mx-auto max-w-3xl p-6">
       <FormTabs formId={submission.formId} active="responses" />
 
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-stone-900">Response</h1>
-        <Badge variant="neutral">v{submission.version}</Badge>
-      </div>
-      <p className="mt-1 font-mono text-xs text-stone-400">{submission.id}</p>
-      <p className="mt-1 text-sm text-stone-500">{formatFullDate(submission.submittedAt)}</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-stone-900">Response</h1>
+          <p className="mt-1 font-mono text-xs text-stone-400">{submission.id}</p>
+          <p className="mt-1 text-sm text-stone-500">{formatFullDate(submission.submittedAt)}</p>
+        </div>
 
-      <Card className="mt-6" padding="none">
-        {entries.length === 0 ? (
-          <p className="p-4 text-sm text-stone-500">This response has no data.</p>
+        <div className="flex shrink-0 items-center gap-2">
+          <Badge variant="neutral">v{submission.version}</Badge>
+          <Button
+            type="button"
+            size="sm"
+            variant={layout === 'standard' ? 'primary' : 'secondary'}
+            onClick={() => setLayout('standard')}
+          >
+            Standard
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={layout === 'compact' ? 'primary' : 'secondary'}
+            onClick={() => setLayout('compact')}
+          >
+            Compact
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-6">
+        {layout === 'compact' ? (
+          <Card>
+            <FormRenderer
+              fields={form.schema.fields}
+              groups={form.schema.groups}
+              layout={layout}
+              defaultValues={submission.data}
+              readOnly
+            />
+          </Card>
         ) : (
-          <dl className="divide-y divide-stone-100">
-            {entries.map(([key, value]) => (
-              <div key={key} className="p-4">
-                <dt className="text-sm font-medium text-stone-500">{humanizeKey(key)}</dt>
-                <dd className="mt-1 text-sm text-stone-900">{formatValue(value)}</dd>
-              </div>
-            ))}
-          </dl>
+          <FormRenderer
+            fields={form.schema.fields}
+            groups={form.schema.groups}
+            layout={layout}
+            defaultValues={submission.data}
+            readOnly
+          />
         )}
-      </Card>
+      </div>
     </div>
   )
 }

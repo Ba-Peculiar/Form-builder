@@ -8,9 +8,10 @@ interface FieldRendererProps {
   register: UseFormRegister<Record<string, unknown>>
   error?: string
   compact?: boolean
+  disabled?: boolean
 }
 
-export function FieldRenderer({ field, register, error, compact }: FieldRendererProps) {
+export function FieldRenderer({ field, register, error, compact, disabled }: FieldRendererProps) {
   const showLabel = field.type !== 'checkbox'
 
   return (
@@ -21,7 +22,7 @@ export function FieldRenderer({ field, register, error, compact }: FieldRenderer
           {field.required && <span className="text-danger-600"> *</span>}
         </label>
       )}
-      <FieldInput field={field} register={register} error={error} compact={compact} />
+      <FieldInput field={field} register={register} error={error} compact={compact} disabled={disabled} />
       <FieldError message={error} />
     </div>
   )
@@ -34,16 +35,17 @@ function inputClass(error: string | undefined, padding: string, compact?: boolea
     : compact
       ? 'border-stone-200 focus:border-accent-500 focus:ring-2 focus:ring-accent-200'
       : 'border-stone-300 focus:border-accent-500 focus:ring-2 focus:ring-accent-200'
-  return `${size} ${padding} ${tone}`
+  return `${size} ${padding} ${tone} disabled:cursor-not-allowed disabled:bg-stone-50 disabled:text-stone-500`
 }
 
-function FieldInput({ field, register, error, compact }: FieldRendererProps) {
+function FieldInput({ field, register, error, compact, disabled }: FieldRendererProps) {
   switch (field.type) {
     case 'textarea':
       return (
         <textarea
           id={field.id}
           required={field.required}
+          disabled={disabled}
           rows={compact ? 4 : 3}
           className={`w-full resize-none ${compact ? 'bg-white' : 'bg-stone-50'} ${inputClass(error, 'pl-3 pr-3', compact)}`}
           {...register(field.id)}
@@ -60,6 +62,7 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
             inputMode="numeric"
             pattern="[0-9]*"
             required={field.required}
+            disabled={disabled}
             className={`w-full ${inputClass(error, 'pl-9 pr-3', compact)}`}
             {...register(field.id)}
           />
@@ -74,6 +77,7 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
             id={field.id}
             type="email"
             required={field.required}
+            disabled={disabled}
             className={`w-full ${inputClass(error, 'pl-9 pr-3', compact)}`}
             {...register(field.id)}
           />
@@ -88,6 +92,7 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
             id={field.id}
             type="date"
             required={field.required}
+            disabled={disabled}
             className={`w-full ${inputClass(error, 'pl-9 pr-3', compact)}`}
             {...register(field.id)}
           />
@@ -100,6 +105,7 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
           <select
             id={field.id}
             required={field.required}
+            disabled={disabled}
             className={`w-full appearance-none ${inputClass(error, 'pl-3 pr-9', compact)}`}
             {...register(field.id)}
           >
@@ -120,7 +126,8 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
           <input
             id={field.id}
             type="checkbox"
-            className="h-4 w-4 rounded accent-accent-600"
+            disabled={disabled}
+            className="h-4 w-4 rounded accent-accent-600 disabled:cursor-not-allowed"
             {...register(field.id)}
           />
           {field.label}
@@ -135,6 +142,7 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
           id={field.id}
           type="text"
           required={field.required}
+          disabled={disabled}
           className={`w-full ${inputClass(error, 'pl-3 pr-3', compact)}`}
           {...register(field.id)}
         />
