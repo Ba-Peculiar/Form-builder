@@ -104,7 +104,7 @@ export function FormsDashboardPage() {
 }
 
 function FormCard({ form, onDelete }: { form: FormSummary; onDelete: () => void }) {
-  const viewHref = form.status === 'PUBLISHED' ? `/public/forms/${form.id}` : `/forms/${form.id}`
+  const viewHref = form.status === 'PUBLISHED' ? `/forms/${form.id}/view` : `/forms/${form.id}`
 
   return (
     <Card padding="none" className="group relative overflow-hidden transition-shadow hover:shadow-md">

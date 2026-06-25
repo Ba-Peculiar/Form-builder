@@ -2,6 +2,7 @@ import { Link, Route, Routes } from 'react-router-dom'
 import { ClipboardList } from 'lucide-react'
 import { FormBuilderPage } from './pages/FormBuilderPage'
 import { FormsDashboardPage } from './pages/FormsDashboardPage'
+import { FormViewPage } from './pages/FormViewPage'
 import { PublicFormPage } from './pages/PublicFormPage'
 import { SubmissionDetailPage } from './pages/SubmissionDetailPage'
 import { SubmissionListPage } from './pages/SubmissionListPage'
@@ -19,6 +20,7 @@ function App() {
         <Routes>
           <Route path="/" element={<FormsDashboardPage />} />
           <Route path="/forms/:formId" element={<FormBuilderPage />} />
+          <Route path="/forms/:formId/view" element={<FormViewPage />} />
           <Route path="/public/forms/:formId" element={<PublicFormPage />} />
           <Route path="/forms/:formId/submissions" element={<SubmissionListPage />} />
           <Route path="/submissions/:submissionId" element={<SubmissionDetailPage />} />

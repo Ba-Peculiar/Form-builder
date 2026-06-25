@@ -52,7 +52,7 @@ export function FormBuilderPage() {
   // Published forms are locked and rendered via the public view instead of
   // this editor - the builder only ever applies to drafts.
   if (form.status !== 'DRAFT') {
-    return <Navigate to={`/public/forms/${form.id}`} replace />
+    return <Navigate to={`/forms/${form.id}/view`} replace />
   }
 
   const onSubmit = (values: BuilderFormValues) => {

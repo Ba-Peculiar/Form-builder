@@ -12,7 +12,11 @@ export function SubmissionListPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <FormTabs formId={formId ?? ''} active="responses" />
+      <FormTabs
+        formId={formId ?? ''}
+        active="responses"
+        formHref={form?.status === 'PUBLISHED' ? `/forms/${formId}/view` : undefined}
+      />
 
       <div className="flex items-center justify-between gap-4">
         <div>
