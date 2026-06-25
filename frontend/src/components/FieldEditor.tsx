@@ -240,7 +240,7 @@ export function FieldEditor({ fields, groups, onFieldsChange, onGroupsChange, di
             />
           ) : (
             <UngroupedFieldEntry
-              key={entry.field.id}
+              key={index}
               field={entry.field}
               disabled={disabled}
               isFirst={index === 0}
