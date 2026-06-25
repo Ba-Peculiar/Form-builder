@@ -11,7 +11,7 @@ interface FieldRendererProps {
 }
 
 export function FieldRenderer({ field, register, error, compact }: FieldRendererProps) {
-  const showLabel = field.type !== 'checkbox' && !compact
+  const showLabel = field.type !== 'checkbox'
 
   return (
     <div className="flex flex-col">
@@ -37,10 +37,6 @@ function inputClass(error: string | undefined, padding: string, compact?: boolea
   return `${size} ${padding} ${tone}`
 }
 
-function placeholderLabel(field: FieldConfig) {
-  return field.required ? `${field.label} *` : field.label
-}
-
 function FieldInput({ field, register, error, compact }: FieldRendererProps) {
   switch (field.type) {
     case 'textarea':
@@ -49,8 +45,6 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
           id={field.id}
           required={field.required}
           rows={compact ? 4 : 3}
-          placeholder={compact ? placeholderLabel(field) : undefined}
-          aria-label={compact ? field.label : undefined}
           className={`w-full resize-none ${compact ? 'bg-white' : 'bg-stone-50'} ${inputClass(error, 'pl-3 pr-3', compact)}`}
           {...register(field.id)}
         />
@@ -66,8 +60,6 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
             inputMode="numeric"
             pattern="[0-9]*"
             required={field.required}
-            placeholder={compact ? placeholderLabel(field) : undefined}
-            aria-label={compact ? field.label : undefined}
             className={`w-full ${inputClass(error, 'pl-9 pr-3', compact)}`}
             {...register(field.id)}
           />
@@ -82,8 +74,6 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
             id={field.id}
             type="email"
             required={field.required}
-            placeholder={compact ? placeholderLabel(field) : undefined}
-            aria-label={compact ? field.label : undefined}
             className={`w-full ${inputClass(error, 'pl-9 pr-3', compact)}`}
             {...register(field.id)}
           />
@@ -98,7 +88,6 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
             id={field.id}
             type="date"
             required={field.required}
-            aria-label={compact ? field.label : undefined}
             className={`w-full ${inputClass(error, 'pl-9 pr-3', compact)}`}
             {...register(field.id)}
           />
@@ -111,11 +100,10 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
           <select
             id={field.id}
             required={field.required}
-            aria-label={compact ? field.label : undefined}
             className={`w-full appearance-none ${inputClass(error, 'pl-3 pr-9', compact)}`}
             {...register(field.id)}
           >
-            <option value="">{compact ? placeholderLabel(field) : 'Select…'}</option>
+            <option value="">Select…</option>
             {(field.options ?? []).map((option) => (
               <option key={option} value={option}>
                 {option}
@@ -147,8 +135,6 @@ function FieldInput({ field, register, error, compact }: FieldRendererProps) {
           id={field.id}
           type="text"
           required={field.required}
-          placeholder={compact ? placeholderLabel(field) : undefined}
-          aria-label={compact ? field.label : undefined}
           className={`w-full ${inputClass(error, 'pl-3 pr-3', compact)}`}
           {...register(field.id)}
         />

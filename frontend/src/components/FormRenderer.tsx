@@ -81,7 +81,7 @@ export function FormRenderer({
     return (
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
         {sections.map(({ group, fields: groupFieldsList }, index) => (
-          <div key={group.id} className={`space-y-3 ${index > 0 ? 'border-t border-stone-200 pt-6' : ''}`}>
+          <div key={group.id} className={`space-y-3 ${index > 0 ? 'border-t-2 border-stone-300 pt-6' : ''}`}>
             <SectionHeading label={group.label} />
             <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -98,7 +98,7 @@ export function FormRenderer({
         {ungrouped.length > 0 && (
           <div
             className={`grid grid-cols-1 gap-4 sm:grid-cols-2 ${
-              sections.length > 0 ? 'border-t border-stone-200 pt-6' : ''
+              sections.length > 0 ? 'border-t-2 border-stone-300 pt-6' : ''
             }`}
           >
             {ungrouped.map((field) => (
@@ -139,7 +139,7 @@ export function FormRenderer({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
       {sections.map(({ group, fields: groupFieldsList }, index) => (
-        <div key={group.id} className={`space-y-4 ${index > 0 ? 'border-t border-stone-200 pt-6' : ''}`}>
+        <div key={group.id} className={`space-y-4 ${index > 0 ? 'border-t-2 border-stone-300 pt-6' : ''}`}>
           <SectionHeading label={group.label} />
           {groupFieldsList.map((field) => (
             <Card key={field.id} padding="sm">
@@ -150,7 +150,7 @@ export function FormRenderer({
       ))}
 
       {ungrouped.length > 0 && (
-        <div className={`space-y-4 ${sections.length > 0 ? 'border-t border-stone-200 pt-6' : ''}`}>
+        <div className={`space-y-4 ${sections.length > 0 ? 'border-t-2 border-stone-300 pt-6' : ''}`}>
           {ungrouped.map((field) => (
             <Card key={field.id} padding="sm">
               <FieldRenderer field={field} register={register} error={fieldErrors?.[field.id]} />
