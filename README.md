@@ -7,7 +7,7 @@ Built as a Technical Assessment submission (Assignment A).
 ## Live Application
 
 - **Frontend:** <https://form-builder-git-main-bapeculiars-projects.vercel.app/>
-- **Backend API:** <https://form-builder-production-22bf.up.railway.app/api\\>
+- **Backend API:** <https://form-builder-production-22bf.up.railway.app/api/health/>
 
 No credentials are required — form creation, publishing, and submission are all open.
 
