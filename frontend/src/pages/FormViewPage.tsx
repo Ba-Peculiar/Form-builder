@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Navigate, useParams } from 'react-router-dom'
 import { Check, Share2 } from 'lucide-react'
 import { Alert, Button, Card, LoadingState, useToast } from '../components/ui'
 import { FormTabs } from '../components/FormTabs'
@@ -51,13 +51,7 @@ export function FormViewPage() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <Link to="/" className="text-sm text-stone-500 hover:text-stone-900">
-        ← Back to forms
-      </Link>
-
-      <div className="mt-4">
-        <FormTabs formId={form.id} active="questions" formHref={`/forms/${form.id}/view`} />
-      </div>
+      <FormTabs formId={form.id} active="questions" formHref={`/forms/${form.id}/view`} />
 
       <div className="h-2 rounded-t-xl bg-accent-600" />
       <div className="flex flex-col gap-4 rounded-b-xl border border-t-0 border-stone-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">

@@ -29,20 +29,100 @@ No credentials are required — form creation, publishing, and submission are al
 
 ## Local Setup Instructions
 
-### Prerequisites
+Two options are provided.
+
+---
+
+### Option A — Docker 
+
+#### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running. No Node.js or PostgreSQL needed.
+
+#### Step 1 — Clone and enter the project
+
+```bash
+git clone <repo-url>
+cd form-builder
+```
+
+#### Step 2 — Start all services
+
+From the project root (the directory that contains `docker-compose.yml`):
+
+```bash
+docker compose up --build
+```
+
+This command builds and starts three containers:
+
+| Container | What it does | Port |
+|---|---|---|
+| `postgres` | PostgreSQL 16 database | internal only |
+| `backend` | Express API — runs DB migrations then starts the server | 4000 |
+| `frontend` | Vite production build served by nginx | 5173 |
+
+The first build downloads base images and installs npm dependencies. **Expect 3–5 minutes** on a first run. Subsequent `docker compose up` (without `--build`) starts in seconds.
+
+#### Step 3 — Verify everything is running
+
+You will see logs from all three containers in your terminal. Look for these lines, which confirm each service is healthy:
+
+```
+postgres   | database system is ready to accept connections
+backend    | Server listening on port 4000
+frontend   | nginx started
+```
+
+Then confirm the API is reachable:
+
+```bash
+curl http://localhost:4000/api/health
+# Expected: {"status":"ok"}
+```
+
+#### Step 4 — Open the app
+
+Navigate to **<http://localhost:5173>** in your browser. You should see the form builder dashboard.
+
+From there you can:
+- Create a new form and add fields
+- Publish the form
+- share form's public form link and and people whom you share the link to can fill and submit a response
+- View the response in the Responses tab
+
+#### Stopping the stack
+
+To stop the containers without deleting data:
+
+```bash
+docker compose down
+```
+
+To stop and wipe the database volume (full clean slate):
+
+```bash
+docker compose down -v
+```
+
+---
+
+### Option B — Manual setup
+
+#### Prerequisites
 
 - Node.js 20+
-- A running PostgreSQL instance (local install, Homebrew, Docker — any works, as long as you have a connection string)
+- A running PostgreSQL instance (local install, Homebrew, or a Docker one-liner: `docker run -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16-alpine`)
 
-### 1. Database
+#### Step 1 — Database
 
-Create an empty database for the project:
+Create an empty database:
 
 ```bash
 createdb form_builder
 ```
 
-### 2. Backend
+#### Step 2 — Backend
 
 ```bash
 cd backend
@@ -50,27 +130,28 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env` with your database connection and preferred port for example:
+The `.env.example` defaults work as-is if your Postgres is on `localhost:5432` with user `postgres` and password `postgres`. Edit `.env` if your setup differs:
 
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/form_builder?schema=public"
-PORT=3000
+PORT=4000
 ```
 
-Apply the schema and start the API:
+Apply migrations and start the API:
 
 ```bash
 npx prisma migrate dev
 npm run dev
 ```
 
-you should be able to see; "The API is now running at `http://localhost:3000/api`." you can also verify with:
+Confirm it started:
 
 ```bash
-curl http://localhost:3000/api/health
+curl http://localhost:4000/api/health
+# Expected: {"status":"ok"}
 ```
 
-### 3. Frontend
+#### Step 3 — Frontend
 
 In a second terminal:
 
@@ -80,11 +161,7 @@ npm install
 cp .env.example .env
 ```
 
-Edit `.env` to point at the backend you just started:
-
-```env
-VITE_API_URL=http://localhost:3000/api
-```
+The `.env.example` already points at `http://localhost:4000/api`. No edits needed unless you changed the backend port.
 
 Start the dev server:
 
@@ -92,7 +169,7 @@ Start the dev server:
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+Open **<http://localhost:5173>** in your browser.
 
 ---
 
@@ -175,6 +252,22 @@ A `Form` starts as `DRAFT` with exactly one `FormVersion` row (`version_number =
 - Team collaboration and shared ownership of forms.
 - Email notifications to the form creator on each new submission.
 
+### Scaling to production
+
+The architecture is already structured for horizontal growth — here is how each layer would be scaled:
+
+**API (Express)** — the server is fully stateless (no in-memory session, no local file storage). Multiple instances can run behind a load balancer (AWS ALB, Railway replicas, etc.) without coordination. The only shared state is the database.
+
+**Database connections** — `@prisma/adapter-pg` opens a connection pool per API instance. Under high concurrency, many instances competing for Postgres connections becomes the bottleneck. The fix is to put a connection pooler in front of Postgres — PgBouncer in transaction mode, or AWS RDS Proxy — so the database sees a bounded number of connections regardless of how many API instances are running.
+
+**Read vs write load** — form submissions (`POST /api/public/forms/:id/submit`) are write-heavy; viewing submissions and form configurations are read-heavy. At scale these would be separated: writes go to the primary Postgres instance, reads are routed to a read replica. The `formVersionId` pin on every submission means the read replica is always consistent enough for safe reads.
+
+**Frontend** — already solved. The Vite production build is a static bundle deployed to Vercel's CDN. It is distributed globally at the edge with no additional work required.
+
+**Background work** — features like email notifications, CSV export, or webhook delivery should not block the HTTP request. In production these would be pushed onto a job queue (BullMQ backed by Redis, or AWS SQS) and processed by a separate worker process, keeping API response times fast and predictable.
+
+**Observability** — at production scale you would add structured JSON logging (Pino), a metrics endpoint (Prometheus), and distributed tracing (OpenTelemetry) so you can identify slow queries or error spikes before users notice them.
+
 ---
 
 ## AI Usage Disclosure
@@ -193,7 +286,7 @@ Used throughout the full implementation as an AI pair programmer:
 
 - **Backend implementation** — Express routes, Prisma schema and migrations, AJV-based validation service, versioning and submission logic.
 - **Frontend implementation** — React component architecture, TanStack Query data-fetching layer, React Hook Form integration, and the full `FieldEditor` / `FormRenderer` pipeline.
-- **Feature iteration** — the field grouping (sections) system, unified section/field ordering, drag-and-drop within sections, and ungrouped fields as first-class individually-movable entities were all designed and implemented iteratively through back-and-forth conversation: I described the desired behaviour, reviewed the generated code, tested it, and fed back what needed to change.
+- **Feature iteration** — the field grouping (sections) system, unified section/field ordering, drag-and-drop within sections, and ungrouped fields as first-class individually-movable entities were all designed and implemented iteratively through back-and-forth conversation: I described the desired behaviour, reviewed the generated code, tested it, and gave fed back what needed to change.
 - **Responsive design** — systematic pass across all pages and components to handle mobile, tablet, and desktop layouts.
 - **Bug fixes** — issues found during manual testing (focus loss on label edit, ordering edge cases, deployment timing) were diagnosed and fixed in conversation.
 - **Documentation** — this README was drafted with Claude Code based on the actual codebase and decisions made during the build.
