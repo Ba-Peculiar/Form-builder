@@ -29,22 +29,22 @@ export function PublicFormPage() {
 
   if (isError || !form) {
     return (
-      <div className="mx-auto max-w-3xl p-6">
+      <div className="mx-auto max-w-3xl p-4 sm:p-6">
         <Alert variant="error">This form is not published or does not exist.</Alert>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
+    <div className="mx-auto max-w-3xl p-4 sm:p-6">
       <div className="h-2 rounded-t-xl bg-accent-600" />
-      <div className="flex items-center justify-between rounded-b-xl border border-t-0 border-stone-200 bg-white px-6 py-5">
-        <div>
-          <h1 className="text-2xl font-semibold text-stone-900">{form.title}</h1>
-          {form.description && <p className="mt-1 text-stone-600">{form.description}</p>}
+      <div className="flex flex-col gap-4 rounded-b-xl border border-t-0 border-stone-200 bg-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5">
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-semibold text-stone-900 sm:text-2xl">{form.title}</h1>
+          {form.description && <p className="mt-1 text-sm text-stone-600 sm:text-base">{form.description}</p>}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             type="button"
             size="sm"

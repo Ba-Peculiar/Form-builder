@@ -29,7 +29,7 @@ export function FormsDashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
+    <div className="mx-auto max-w-5xl p-4 sm:p-6">
       <DashboardHero onCreate={handleCreateBlank} isCreating={createForm.isPending} />
 
       {createForm.isError && (
@@ -82,7 +82,7 @@ function DashboardHero({
   isCreating: boolean
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent-700 via-accent-600 to-accent-400 px-8 py-12 shadow-sm sm:px-12">
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-accent-700 via-accent-600 to-accent-400 px-5 py-8 shadow-sm sm:px-8 sm:py-12">
       <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 left-1/3 h-72 w-72 rounded-full bg-accent-200/20 blur-3xl" />
       <ClipboardList
@@ -92,7 +92,7 @@ function DashboardHero({
 
       <div className="relative max-w-lg">
         <p className="text-sm font-semibold uppercase tracking-wide text-accent-100">Welcome back</p>
-        <h1 className="mt-2 text-3xl font-semibold text-white sm:text-4xl">
+        <h1 className="mt-2 text-2xl font-semibold text-white sm:text-3xl lg:text-4xl">
           Create a new form, or pick up a draft
         </h1>
         <p className="mt-3 text-accent-50/90">
@@ -134,11 +134,11 @@ function FormCard({ form, onDelete }: { form: FormSummary; onDelete: () => void 
         <FormPreviewThumbnail />
       </Link>
 
-      <div className="flex items-center justify-between gap-2 border-t border-stone-200 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-1 border-t border-stone-200 p-3">
         <Link to={viewHref} className="truncate text-sm font-medium text-stone-900">
           {form.title}
         </Link>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1">
           {form.currentVersion && <Badge variant="neutral">v{form.currentVersion}</Badge>}
           <Badge variant={form.status === 'PUBLISHED' ? 'published' : 'draft'}>{form.status}</Badge>
         </div>

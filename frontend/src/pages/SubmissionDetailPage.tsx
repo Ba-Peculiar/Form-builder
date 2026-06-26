@@ -18,24 +18,24 @@ export function SubmissionDetailPage() {
 
   if (isError || !submission || !form) {
     return (
-      <div className="mx-auto max-w-3xl p-6">
+      <div className="mx-auto max-w-3xl p-4 sm:p-6">
         <Alert variant="error">Response not found.</Alert>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
+    <div className="mx-auto max-w-3xl p-4 sm:p-6">
       <FormTabs formId={submission.formId} active="responses" />
 
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-stone-900">Response</h1>
-          <p className="mt-1 font-mono text-xs text-stone-400">{submission.id}</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0">
+          <h1 className="text-xl font-semibold text-stone-900 sm:text-2xl">Response</h1>
+          <p className="mt-1 truncate font-mono text-xs text-stone-400">{submission.id}</p>
           <p className="mt-1 text-sm text-stone-500">{formatFullDate(submission.submittedAt)}</p>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="neutral">v{submission.version}</Badge>
           <Button
             type="button"

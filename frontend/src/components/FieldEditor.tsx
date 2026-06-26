@@ -327,14 +327,16 @@ function FieldGroupSection({
   return (
     <div className="space-y-3 rounded-xl border border-dashed border-stone-300 p-4">
       <div className="flex items-center justify-between gap-2">
-        <TextInput
-          aria-label="Section label"
-          value={group.label}
-          disabled={disabled}
-          onChange={(e) => onRename(e.target.value)}
-          className="max-w-xs border-none px-0 text-base font-semibold"
-        />
-        <div className="flex items-center gap-1">
+        <div className="min-w-0 flex-1">
+          <TextInput
+            aria-label="Section label"
+            value={group.label}
+            disabled={disabled}
+            onChange={(e) => onRename(e.target.value)}
+            className="border-none px-0 text-base font-semibold"
+          />
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
           <IconButton icon={ChevronUp} label="Move section up" onClick={onMoveUp} disabled={disabled || isFirst} />
           <IconButton
             icon={ChevronDown}
@@ -386,9 +388,9 @@ function UngroupedFieldEntry({
 }: UngroupedFieldEntryProps) {
   return (
     <Card className="group focus-within:border-l-4 focus-within:border-l-accent-600 focus-within:ring-2 focus-within:ring-accent-200">
-      <div className="mb-3 flex items-center justify-between">
-        <span className="font-mono text-xs text-stone-400">id: {field.id}</span>
-        <div className="flex items-center gap-1">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <span className="min-w-0 truncate font-mono text-xs text-stone-400">id: {field.id}</span>
+        <div className="flex shrink-0 items-center gap-1">
           <IconButton icon={ChevronUp} label="Move field up" onClick={onMoveUp} disabled={disabled || isFirst} />
           <IconButton icon={ChevronDown} label="Move field down" onClick={onMoveDown} disabled={disabled || isLast} />
           <IconButton icon={X} label="Remove field" variant="danger" onClick={onRemove} disabled={disabled} />
@@ -495,21 +497,21 @@ function FieldRow({ field, disabled, onLabelChange, onChange, onRemove }: FieldR
         isDragging ? 'opacity-50' : ''
       }`}
     >
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <button
             type="button"
             {...attributes}
             {...listeners}
             disabled={disabled}
             aria-label="Drag to reorder"
-            className="cursor-grab touch-none text-stone-400 hover:text-stone-600 active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-30"
+            className="shrink-0 cursor-grab touch-none text-stone-400 hover:text-stone-600 active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-30"
           >
             <GripVertical className="h-4 w-4" />
           </button>
-          <span className="font-mono text-xs text-stone-400">id: {field.id}</span>
+          <span className="truncate font-mono text-xs text-stone-400">id: {field.id}</span>
         </div>
-        <div className="opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+        <div className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
           <IconButton icon={X} label="Remove field" variant="danger" onClick={onRemove} disabled={disabled} />
         </div>
       </div>
@@ -532,7 +534,7 @@ function FieldBody({
 }) {
   return (
     <>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <TextInput
           label="Label"
           value={field.label}
@@ -564,7 +566,7 @@ function FieldBody({
       </div>
 
       {(field.type === 'text' || field.type === 'textarea') && (
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <NumberField
             label="Min length"
             value={field.minLength}
@@ -581,7 +583,7 @@ function FieldBody({
       )}
 
       {field.type === 'number' && (
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <NumberField
             label="Min digits"
             value={field.min}

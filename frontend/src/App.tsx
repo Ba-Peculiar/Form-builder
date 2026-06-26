@@ -13,7 +13,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-stone-100 text-stone-900">
-      <header className="border-b border-stone-200 bg-white px-6 py-4">
+      <header className="border-b border-stone-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
         {isPublicForm ? (
           <div className="flex items-center gap-2">
             <ClipboardList className="h-5 w-5 text-accent-600" />

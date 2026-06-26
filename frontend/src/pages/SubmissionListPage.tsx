@@ -12,14 +12,14 @@ export function SubmissionListPage() {
   const { data: submissions, isLoading, isError } = useSubmissions(formId ?? '')
 
   return (
-    <div className="mx-auto max-w-5xl p-6">
+    <div className="mx-auto max-w-5xl p-4 sm:p-6">
       <FormTabs
         formId={formId ?? ''}
         active="responses"
         formHref={form?.status === 'PUBLISHED' ? `/forms/${formId}/view` : undefined}
       />
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-stone-900">Responses</h1>
           {form && <p className="mt-1 text-sm text-stone-500">{form.title}</p>}

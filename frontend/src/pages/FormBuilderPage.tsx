@@ -44,7 +44,7 @@ export function FormBuilderPage() {
 
   if (isError || !form) {
     return (
-      <div className="mx-auto max-w-3xl p-6">
+      <div className="mx-auto max-w-3xl p-4 sm:p-6">
         <Alert variant="error">Form not found.</Alert>
       </div>
     )
@@ -76,7 +76,7 @@ export function FormBuilderPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl p-6">
+    <div className="mx-auto max-w-3xl p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-end gap-2">
         <Button type="submit" form={FORM_ELEMENT_ID} size="sm" isLoading={updateForm.isPending}>
           Save
